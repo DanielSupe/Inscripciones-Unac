@@ -1,0 +1,63 @@
+// Esquema de la plataforma SION.
+//
+// En este change solo existe `User`. Los modelos de inscripción, documentos,
+// recibos y periodos académicos llegan en los changes siguientes.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7 ya no admite `url` aquí: la cadena de conexión vive en
+// `prisma.config.ts`, y el cliente la recibe a través de un adaptador.
+datasource db {
+  provider = "postgresql"
+}
+
+/// Permisos del usuario. Nunca representa el avance del proceso de inscripción:
+/// eso vive en el estado de la inscripción, y son campos separados a propósito.
+/// Solo se llega a STUDENT como efecto de aprobar una inscripción.
+enum Role {
+  APPLICANT
+  STUDENT
+  ADMIN
+}
+
+enum DocumentType {
+  CC
+  TI
+  CE
+  PA
+  PEP
+}
+
+model User {
+  id             String       @id @default(cuid())
+  documentType   DocumentType
+  documentNumber String
+  email          String       @unique
+  passwordHash   String
+  role           Role         @default(APPLICANT)
+
+  /// Marca la cuenta de administrador original creada por el seed. Ningún flujo
+  /// puede eliminarla, desactivarla ni cambiarle el rol.
+  isSystem Boolean @default(false)
+
+  /// El MVP no verifica el correo, pero la columna existe desde ya para no
+  /// forzar una migración cuando se añada la verificación.
+  emailVerifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Borrado lógico. Los usuarios nunca se eliminan físicamente porque de ellos
+  /// cuelgan inscripciones y recibos.
+  deletedAt DateTime?
+
+  /// La identidad real de una persona es su documento. El índice único está en
+  /// la base de datos, no solo en el service: la validación da el buen mensaje,
+  /// pero la garantía es esta.
+  @@unique([documentType, documentNumber])
+  @@index([role])
+  @@index([deletedAt])
+  @@map("users")
+}
