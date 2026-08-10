@@ -1,0 +1,19 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# Una sola versión de TypeScript en todo el repo. typescript-eslint 8 declara
+# el peer `>=4.8.4 <6.1.0`, así que TS 7 (el port nativo) rompe el lint aunque
+# el typecheck funcione. Sin este override, pnpm resuelve TS 7 por su cuenta.
+overrides:
+  typescript: '5.9.3'
+
+# pnpm no ejecuta scripts de instalación salvo que se aprueben explícitamente.
+# Estas dependencias los necesitan para funcionar: Prisma genera su cliente,
+# bcrypt y esbuild compilan binarios nativos.
+allowBuilds:
+  '@prisma/client': true
+  prisma: true
+  bcrypt: true
+  esbuild: true
+  '@prisma/engines': true

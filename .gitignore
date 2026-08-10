@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Entornos: nunca se versionan valores reales, solo los .env.example
+.env
+.env.*
+!.env.example
+
+# Editor y sistema operativo
+.DS_Store
+Thumbs.db
+*.log
