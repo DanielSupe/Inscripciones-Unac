@@ -1,0 +1,102 @@
+/* Estética deliberadamente mínima: el diseño llega en un change posterior. */
+
+:root {
+  --texto: #1a1a1a;
+  --tenue: #6b6b6b;
+  --borde: #d8d8d8;
+  --ok: #1f7a3d;
+  --alerta: #a8410f;
+  --error: #a11212;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  color: var(--texto);
+}
+
+body {
+  margin: 0;
+  background: #fafafa;
+}
+
+.pagina {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.subtitulo {
+  margin: 0.25rem 0 2.5rem;
+  color: var(--tenue);
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.estado {
+  border: 1px solid var(--borde);
+  border-left-width: 4px;
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  background: #fff;
+}
+
+.estado p {
+  margin: 0 0 0.4rem;
+}
+
+.estado--ok {
+  border-left-color: var(--ok);
+}
+
+.estado--degradado {
+  border-left-color: var(--alerta);
+}
+
+.estado--error {
+  border-left-color: var(--error);
+}
+
+.estado--cargando {
+  color: var(--tenue);
+}
+
+.estado__detalle {
+  color: var(--tenue);
+  font-size: 0.9rem;
+}
+
+button {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #1a4fd8;
+  outline-offset: 2px;
+}
+
+.aviso {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--borde);
+  color: var(--tenue);
+  font-size: 0.9rem;
+}
