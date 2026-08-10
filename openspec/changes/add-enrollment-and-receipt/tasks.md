@@ -1,10 +1,10 @@
 ## 1. Infraestructura de almacenamiento
 
-- [ ] 1.1 Crear el bucket en AWS S3, cerrado al público, y anotar su nombre y región
-- [ ] 1.2 Configurar el CORS del bucket permitiendo `PUT` y `GET` desde el origen del frontend, exponiendo la cabecera `ETag`
-- [ ] 1.3 Crear un usuario de servicio con una política que le permita leer, escribir y borrar únicamente en ese bucket, y generar su credencial
-- [ ] 1.4 Añadir una regla de expiración que borre los objetos sin confirmar, para que las subidas abandonadas no se acumulen
-- [ ] 1.5 Comprobar desde el navegador que una subida firmada llega al bucket, antes de escribir código que dependa de ello
+- [x] 1.1 Crear el bucket en AWS S3, cerrado al público, y anotar su nombre y región
+- [x] 1.2 Configurar el CORS del bucket permitiendo `PUT` y `GET` desde el origen del frontend, exponiendo la cabecera `ETag`
+- [x] 1.3 Crear un usuario de servicio con una política que le permita leer, escribir y borrar únicamente en ese bucket, y generar su credencial
+- [x] 1.4 Añadir una regla de ciclo de vida que aborte las cargas multiparte incompletas a los 7 días, y un aviso de presupuesto en la cuenta
+- [x] 1.5 Comprobar desde el navegador que una subida firmada llega al bucket, antes de escribir código que dependa de ello
 
 ## 2. Contrato y configuración
 
