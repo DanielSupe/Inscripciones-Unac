@@ -52,6 +52,38 @@ const apiEnvShape = z.object({
 
   // ─── Políticas de tratamiento de datos ────────────────────────────────────
   POLICY_VERSION: z.string().min(1, { message: 'identifica la versión vigente, por ejemplo 2026-01' }),
+
+  // ─── Almacenamiento de documentos ─────────────────────────────────────────
+  // El bucket guarda documentos de identidad, así que sus credenciales tienen
+  // el mismo trato que el secreto de sesión: requeridas y sin valor por defecto.
+  S3_REGION: z.string().min(1, { message: 'la región del bucket, por ejemplo us-east-1' }),
+  S3_BUCKET: z.string().min(1, { message: 'el nombre del bucket' }),
+  S3_ACCESS_KEY_ID: z.string().min(16, { message: 'la credencial del usuario de servicio' }),
+  S3_SECRET_ACCESS_KEY: z.string().min(16, { message: 'el secreto del usuario de servicio' }),
+  // Vacío con AWS; solo se fija al usar almacenamiento compatible con S3.
+  S3_ENDPOINT: z.string().default(''),
+  S3_FORCE_PATH_STYLE: z
+    .enum(['true', 'false'], { message: 'debe ser true o false' })
+    .default('false')
+    .transform((value) => value === 'true'),
+  S3_PRESIGN_EXPIRES_SECONDS: z.coerce
+    .number({ message: 'debe ser un número de segundos' })
+    .int({ message: 'debe ser un número entero' })
+    .min(30, { message: 'menos de 30 segundos no da tiempo a subir un archivo' })
+    .max(3600, { message: 'más de una hora es una ventana innecesariamente amplia' })
+    .default(300),
+  MAX_UPLOAD_BYTES: z.coerce
+    .number({ message: 'debe ser un número de bytes' })
+    .int({ message: 'debe ser un número entero' })
+    .positive({ message: 'debe ser mayor que 0' })
+    .default(5_242_880),
+
+  // ─── Recibo de pago ───────────────────────────────────────────────────────
+  RECEIPT_DUE_DAYS: z.coerce
+    .number({ message: 'debe ser un número de días' })
+    .int({ message: 'debe ser un número entero' })
+    .positive({ message: 'debe ser mayor que 0' })
+    .default(15),
 });
 
 /**

@@ -8,64 +8,64 @@
 
 ## 2. Contrato y configuración
 
-- [ ] 2.1 Añadir a `packages/contracts` los enums de dominio nuevos: sexo, jornada, modalidad y tipo de documento adjunto
-- [ ] 2.2 Añadir a `packages/contracts` el esquema Zod de cada paso del wizard, cada uno validable por separado
-- [ ] 2.3 Añadir el esquema de la inscripción completa, que es el que exige la transición de envío y el que produce los mensajes de qué falta
-- [ ] 2.4 Añadir los esquemas y tipos del catálogo, del documento adjunto y del recibo
-- [ ] 2.5 Añadir al esquema del entorno del API las nueve variables nuevas, con las credenciales del bucket requeridas y sin valor por defecto
+- [x] 2.1 Añadir a `packages/contracts` los enums de dominio nuevos: sexo, jornada, modalidad y tipo de documento adjunto
+- [x] 2.2 Añadir a `packages/contracts` el esquema Zod de cada paso del wizard, cada uno validable por separado
+- [x] 2.3 Añadir el esquema de la inscripción completa, que es el que exige la transición de envío y el que produce los mensajes de qué falta
+- [x] 2.4 Añadir los esquemas y tipos del catálogo, del documento adjunto y del recibo
+- [x] 2.5 Añadir al esquema del entorno del API las nueve variables nuevas, con las credenciales del bucket requeridas y sin valor por defecto
 
 ## 3. Modelo de datos
 
-- [ ] 3.1 Definir en el esquema de Prisma los modelos de programa y periodo académico con sus enums
-- [ ] 3.2 Definir el modelo de inscripción con los campos de los tres pasos, nulables, y la unicidad de aspirante y periodo
-- [ ] 3.3 Definir los modelos de documento adjunto y de recibo, con la unicidad de documento por tipo y la de recibo por inscripción
-- [ ] 3.4 Crear la secuencia de numeración del recibo en la base de datos, para que dos envíos simultáneos no produzcan el mismo número
-- [ ] 3.5 Generar y aplicar la migración
-- [ ] 3.6 Ampliar el seed con los programas académicos y un periodo abierto, conservando su idempotencia
+- [x] 3.1 Definir en el esquema de Prisma los modelos de programa y periodo académico con sus enums
+- [x] 3.2 Definir el modelo de inscripción con los campos de los tres pasos, nulables, y la unicidad de aspirante y periodo
+- [x] 3.3 Definir los modelos de documento adjunto y de recibo, con la unicidad de documento por tipo y la de recibo por inscripción
+- [x] 3.4 Crear la secuencia de numeración del recibo en la base de datos, para que dos envíos simultáneos no produzcan el mismo número
+- [x] 3.5 Generar y aplicar la migración
+- [x] 3.6 Ampliar el seed con los programas académicos y un periodo abierto, conservando su idempotencia
 
 ## 4. Módulo `catalog`
 
-- [ ] 4.1 Crear el repositorio con la consulta de programas ofertados y la del periodo abierto en una fecha dada
-- [ ] 4.2 Crear el service con la resolución del periodo vigente y la comprobación de que un programa está ofertado
-- [ ] 4.3 Crear los endpoints públicos de consulta de programas y del periodo abierto, y la respuesta clara cuando no hay ninguno
+- [x] 4.1 Crear el repositorio con la consulta de programas ofertados y la del periodo abierto en una fecha dada
+- [x] 4.2 Crear el service con la resolución del periodo vigente y la comprobación de que un programa está ofertado
+- [x] 4.3 Crear los endpoints públicos de consulta de programas y del periodo abierto, y la respuesta clara cuando no hay ninguno
 - [ ] 4.4 Probar el service: periodo abierto, antes de abrir, después de cerrar, y sin ningún periodo configurado
 
 ## 5. Módulo `enrollment`: máquina de estados
 
-- [ ] 5.1 Crear el módulo de transiciones que declara qué cambios de estado existen y qué condiciones exige cada uno
-- [ ] 5.2 Implementar la condición de envío: datos completos, documentos completos y periodo abierto
-- [ ] 5.3 Implementar la condición de aprobación: pago verificado. La usará el change 4
-- [ ] 5.4 Implementar la transición de corrección, que devuelve una inscripción rechazada a estado editable
+- [x] 5.1 Crear el módulo de transiciones que declara qué cambios de estado existen y qué condiciones exige cada uno
+- [x] 5.2 Implementar la condición de envío: datos completos, documentos completos y periodo abierto
+- [x] 5.3 Implementar la condición de aprobación: pago verificado. La usará el change 4
+- [x] 5.4 Implementar la transición de corrección, que devuelve una inscripción rechazada a estado editable
 - [ ] 5.5 Probar exhaustivamente la máquina de estados, incluidas todas las transiciones no permitidas
 
 ## 6. Módulo `enrollment`: datos y pertenencia
 
-- [ ] 6.1 Crear el repositorio con las consultas filtrando por dueño en la misma cláusula, de modo que un recurso ajeno devuelva vacío
-- [ ] 6.2 Crear el service con la firma que exige la sesión junto al identificador, para que no se pueda pedir un recurso sin decir quién lo pide
-- [ ] 6.3 Implementar la excepción de ADMIN en un único punto, documentada
-- [ ] 6.4 Implementar el inicio de inscripción, que devuelve la existente si ya hay una para ese periodo
-- [ ] 6.5 Implementar el guardado por pasos, que acepta datos parciales pero rechaza los que tengan formato inválido
-- [ ] 6.6 Implementar el envío, que valida contra el esquema completo y delega la emisión del recibo
-- [ ] 6.7 Implementar la consulta del proceso, incluido el motivo del último rechazo
-- [ ] 6.8 Crear el controller y las rutas, todas protegidas y declarando los roles que las pueden usar
+- [x] 6.1 Crear el repositorio con las consultas filtrando por dueño en la misma cláusula, de modo que un recurso ajeno devuelva vacío
+- [x] 6.2 Crear el service con la firma que exige la sesión junto al identificador, para que no se pueda pedir un recurso sin decir quién lo pide
+- [x] 6.3 Implementar la excepción de ADMIN en un único punto, documentada
+- [x] 6.4 Implementar el inicio de inscripción, que devuelve la existente si ya hay una para ese periodo
+- [x] 6.5 Implementar el guardado por pasos, que acepta datos parciales pero rechaza los que tengan formato inválido
+- [x] 6.6 Implementar el envío, que valida contra el esquema completo y delega la emisión del recibo
+- [x] 6.7 Implementar la consulta del proceso, incluido el motivo del último rechazo
+- [x] 6.8 Crear el controller y las rutas, todas protegidas y declarando los roles que las pueden usar
 
 ## 7. Módulo `documents`
 
-- [ ] 7.1 Crear en `shared/storage/` el cliente del almacenamiento y el firmador, como único punto que habla con el bucket
-- [ ] 7.2 Implementar la firma del permiso de subida, validando tipo y tamaño **antes** de firmar y componiendo la clave en el servidor
-- [ ] 7.3 Implementar la confirmación de subida, que registra el documento y sustituye el anterior del mismo tipo
-- [ ] 7.4 Implementar la firma del permiso de lectura, previa comprobación de pertenencia
-- [ ] 7.5 Impedir adjuntar o sustituir documentos cuando la inscripción no es editable
-- [ ] 7.6 Crear el controller y las rutas del módulo
+- [x] 7.1 Crear en `shared/storage/` el cliente del almacenamiento y el firmador, como único punto que habla con el bucket
+- [x] 7.2 Implementar la firma del permiso de subida, validando tipo y tamaño **antes** de firmar y componiendo la clave en el servidor
+- [x] 7.3 Implementar la confirmación de subida, que registra el documento y sustituye el anterior del mismo tipo
+- [x] 7.4 Implementar la firma del permiso de lectura, previa comprobación de pertenencia
+- [x] 7.5 Impedir adjuntar o sustituir documentos cuando la inscripción no es editable
+- [x] 7.6 Crear el controller y las rutas del módulo
 - [ ] 7.7 Probar el service con un doble del almacenamiento: tipo no admitido, tamaño excedido, sustitución, y acceso a un documento ajeno
 
 ## 8. Módulo `receipt`
 
-- [ ] 8.1 Crear el repositorio y el service de emisión, tomando el valor del periodo y copiándolo en el recibo
-- [ ] 8.2 Implementar la numeración consecutiva por periodo apoyada en la secuencia de la base de datos
-- [ ] 8.3 Implementar la consulta del recibo con comprobación de pertenencia
-- [ ] 8.4 Implementar la generación del PDF con `pdfkit`, con los datos que exige la spec
-- [ ] 8.5 Crear el controller y las rutas, incluida la descarga con su tipo de contenido y nombre de archivo
+- [x] 8.1 Crear el repositorio y el service de emisión, tomando el valor del periodo y copiándolo en el recibo
+- [x] 8.2 Implementar la numeración consecutiva por periodo apoyada en la secuencia de la base de datos
+- [x] 8.3 Implementar la consulta del recibo con comprobación de pertenencia
+- [x] 8.4 Implementar la generación del PDF con `pdfkit`, con los datos que exige la spec
+- [x] 8.5 Crear el controller y las rutas, incluida la descarga con su tipo de contenido y nombre de archivo
 - [ ] 8.6 Probar que reenviar no emite un recibo nuevo y que el valor no cambia al cambiar la tarifa del periodo
 
 ## 9. Frontend: el wizard

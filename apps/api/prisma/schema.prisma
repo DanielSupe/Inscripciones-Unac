@@ -30,6 +30,44 @@ enum DocumentType {
   PEP
 }
 
+/// Avance de la inscripción. Es un eje distinto del rol: nadie llega a STUDENT
+/// por editar un campo, sino como efecto de que esta máquina llegue a APPROVED.
+enum EnrollmentStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum Shift {
+  DAY
+  NIGHT
+}
+
+enum Modality {
+  ON_SITE
+  DISTANCE
+}
+
+enum AttachmentType {
+  IDENTITY
+  ICFES
+}
+
+/// Eje del pago, independiente del avance de la inscripción. Aprobar exige que
+/// esté en VERIFIED, pero el pago avanza por su cuenta.
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+}
+
 model User {
   id             String       @id @default(cuid())
   documentType   DocumentType
@@ -59,6 +97,10 @@ model User {
   /// cuelgan inscripciones y recibos.
   deletedAt DateTime?
 
+  enrollments         Enrollment[]
+  reviewedEnrollments Enrollment[]     @relation("EnrollmentReviewer")
+  verifiedReceipts    PaymentReceipt[] @relation("ReceiptVerifier")
+
   /// La identidad real de una persona es su documento. El índice único está en
   /// la base de datos, no solo en el service: la validación da el buen mensaje,
   /// pero la garantía es esta.
@@ -66,4 +108,132 @@ model User {
   @@index([role])
   @@index([deletedAt])
   @@map("users")
+}
+
+/// Programa al que se puede aspirar. Se siembra; no hay CRUD.
+model AcademicProgram {
+  id       String  @id @default(cuid())
+  code     String  @unique
+  name     String
+  /// Sale de oferta sin borrarse, para no romper las inscripciones que lo eligieron.
+  isActive Boolean @default(true)
+
+  enrollments Enrollment[]
+
+  @@map("academic_programs")
+}
+
+/// Ventana de inscripción de un semestre, con su tarifa. El CRUD llega en el
+/// change de la consola de administración; aquí se siembra.
+model AcademicPeriod {
+  id       String   @id @default(cuid())
+  code     String   @unique
+  opensAt  DateTime
+  closesAt DateTime
+  /// Valor del derecho de inscripción vigente. Se copia al recibo al emitirlo.
+  enrollmentFeeAmount Decimal @db.Decimal(12, 2)
+  currency            String  @default("COP")
+  isActive            Boolean @default(true)
+
+  /// Consecutivo de recibos de este periodo. Se incrementa con un UPDATE
+  /// atómico, no leyendo y sumando en la aplicación: dos envíos simultáneos
+  /// leerían el mismo valor y producirían el mismo número de recibo.
+  receiptCounter Int @default(0)
+
+  enrollments Enrollment[]
+
+  @@map("academic_periods")
+}
+
+model Enrollment {
+  id        String           @id @default(cuid())
+  userId    String
+  programId String?
+  periodId  String
+  status    EnrollmentStatus @default(DRAFT)
+
+  /// Casi todos los campos son nulables a propósito: el wizard guarda en cada
+  /// paso, así que un borrador está incompleto por definición. Lo que exige que
+  /// estén llenos es la transición de envío, no la columna.
+  firstName  String?
+  lastName   String?
+  birthDate  DateTime?
+  sex        Sex?
+  phone      String?
+  city       String?
+  department String?
+
+  previousSchool    String?
+  graduationYear    Int?
+  icfesRegistration String?
+  icfesScore        Int?
+
+  shift    Shift?
+  modality Modality?
+
+  submittedAt      DateTime?
+  reviewedAt       DateTime?
+  reviewedByUserId String?
+  /// Solo el motivo del último rechazo: se decidió no guardar historial.
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id])
+  program  AcademicProgram? @relation(fields: [programId], references: [id])
+  period   AcademicPeriod  @relation(fields: [periodId], references: [id])
+  reviewer User?           @relation("EnrollmentReviewer", fields: [reviewedByUserId], references: [id])
+
+  attachments EnrollmentAttachment[]
+  receipt     PaymentReceipt?
+
+  /// Una inscripción por aspirante y periodo. Un rechazo en un semestre no
+  /// impide intentarlo en el siguiente.
+  @@unique([userId, periodId])
+  @@index([status])
+  @@index([periodId, status])
+  @@map("enrollments")
+}
+
+model EnrollmentAttachment {
+  id           String         @id @default(cuid())
+  enrollmentId String
+  type         AttachmentType
+  /// Clave del objeto en el almacenamiento. La compone el servidor; el cliente
+  /// nunca la propone, porque proponerla sería poder escribir donde no le toca.
+  storageKey  String
+  contentType String
+  sizeBytes   Int
+  uploadedAt  DateTime @default(now())
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  /// Adjuntar de nuevo el mismo tipo sustituye; no acumula.
+  @@unique([enrollmentId, type])
+  @@map("enrollment_attachments")
+}
+
+model PaymentReceipt {
+  id            String @id @default(cuid())
+  enrollmentId  String @unique
+  receiptNumber String @unique
+
+  /// El valor se copia del periodo al emitir, en vez de leerse por relación: un
+  /// recibo tiene valor probatorio y no puede cambiar porque alguien edite una
+  /// tarifa después.
+  amount   Decimal @db.Decimal(12, 2)
+  currency String  @default("COP")
+
+  issuedAt DateTime      @default(now())
+  dueAt    DateTime
+  status   PaymentStatus @default(PENDING)
+
+  verifiedAt       DateTime?
+  verifiedByUserId String?
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  verifier   User?      @relation("ReceiptVerifier", fields: [verifiedByUserId], references: [id])
+
+  @@map("payment_receipts")
 }

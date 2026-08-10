@@ -5,6 +5,10 @@ import { env } from '@repo/config/server';
 import { errorHandler, notFoundHandler } from './shared/errors';
 import { healthRoutes } from './modules/health/health.routes';
 import { authRoutes } from './modules/auth/auth.routes';
+import { catalogRoutes } from './modules/catalog/catalog.routes';
+import { enrollmentRoutes } from './modules/enrollment/enrollment.routes';
+import { documentsRoutes } from './modules/documents/documents.routes';
+import { receiptRoutes } from './modules/receipt/receipt.routes';
 
 /**
  * Construye la aplicación sin ponerla a escuchar.
@@ -29,6 +33,10 @@ export function createApp(): Express {
 
   app.use(healthRoutes);
   app.use(authRoutes);
+  app.use(catalogRoutes);
+  app.use(enrollmentRoutes);
+  app.use(documentsRoutes);
+  app.use(receiptRoutes);
 
   // El orden importa: primero la ruta no encontrada, y el manejador de errores
   // siempre al final.

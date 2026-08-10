@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcrypt';
 import { seedEnv } from '@repo/config/seed';
+import { seedCatalog } from './seed-catalog';
 
 // El seed corre fuera de la aplicación, así que abre su propia conexión con la
 // configuración de siembra en vez de reutilizar el cliente del API.
@@ -92,6 +93,7 @@ async function seedInitialAdmin(): Promise<void> {
 
 async function main(): Promise<void> {
   await seedInitialAdmin();
+  await seedCatalog(prisma);
 }
 
 main()

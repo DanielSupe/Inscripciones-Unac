@@ -45,3 +45,47 @@ export type EnrollmentStatus = z.infer<typeof enrollmentStatusSchema>;
 export const PAYMENT_STATUSES = ['PENDING', 'VERIFIED'] as const;
 export const paymentStatusSchema = z.enum(PAYMENT_STATUSES);
 export type PaymentStatus = z.infer<typeof paymentStatusSchema>;
+
+export const SEXES = ['MALE', 'FEMALE', 'OTHER'] as const;
+export const sexSchema = z.enum(SEXES);
+export type Sex = z.infer<typeof sexSchema>;
+
+export const SEX_LABELS: Record<Sex, string> = {
+  MALE: 'Masculino',
+  FEMALE: 'Femenino',
+  OTHER: 'Otro',
+};
+
+/** Jornada en la que se cursa el programa. */
+export const SHIFTS = ['DAY', 'NIGHT'] as const;
+export const shiftSchema = z.enum(SHIFTS);
+export type Shift = z.infer<typeof shiftSchema>;
+
+export const SHIFT_LABELS: Record<Shift, string> = {
+  DAY: 'Diurna',
+  NIGHT: 'Nocturna',
+};
+
+export const MODALITIES = ['ON_SITE', 'DISTANCE'] as const;
+export const modalitySchema = z.enum(MODALITIES);
+export type Modality = z.infer<typeof modalitySchema>;
+
+export const MODALITY_LABELS: Record<Modality, string> = {
+  ON_SITE: 'Presencial',
+  DISTANCE: 'A distancia',
+};
+
+/** Documentos que el aspirante debe adjuntar para poder enviar su inscripción. */
+export const ATTACHMENT_TYPES = ['IDENTITY', 'ICFES'] as const;
+export const attachmentTypeSchema = z.enum(ATTACHMENT_TYPES);
+export type AttachmentType = z.infer<typeof attachmentTypeSchema>;
+
+export const ATTACHMENT_TYPE_LABELS: Record<AttachmentType, string> = {
+  IDENTITY: 'Documento de identidad',
+  ICFES: 'Resultados ICFES (Saber 11)',
+};
+
+/** Tipos de archivo admitidos al adjuntar. Se comprueban antes de firmar la subida. */
+export const ALLOWED_ATTACHMENT_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'] as const;
+export const attachmentMimeTypeSchema = z.enum(ALLOWED_ATTACHMENT_MIME_TYPES);
+export type AttachmentMimeType = z.infer<typeof attachmentMimeTypeSchema>;
