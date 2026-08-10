@@ -1,8 +1,10 @@
 import express, { type Express } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { env } from '@repo/config/server';
 import { errorHandler, notFoundHandler } from './shared/errors';
 import { healthRoutes } from './modules/health/health.routes';
+import { authRoutes } from './modules/auth/auth.routes';
 
 /**
  * Construye la aplicación sin ponerla a escuchar.
@@ -23,8 +25,10 @@ export function createApp(): Express {
   );
 
   app.use(express.json());
+  app.use(cookieParser());
 
   app.use(healthRoutes);
+  app.use(authRoutes);
 
   // El orden importa: primero la ruta no encontrada, y el manejador de errores
   // siempre al final.

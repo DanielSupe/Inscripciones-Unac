@@ -9,7 +9,7 @@ import { documentTypeSchema } from '@repo/contracts';
  * default ahí es la forma más rápida de que producción arranque apuntando a
  * otro sitio sin que nadie se entere.
  */
-export const apiEnvSchema = z.object({
+const apiEnvShape = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce
     .number({ message: 'debe ser un número de puerto' })
@@ -30,7 +30,46 @@ export const apiEnvSchema = z.object({
     .min(4, { message: 'debe ser al menos 4; por debajo el cifrado es inútil' })
     .max(15, { message: 'debe ser como mucho 15; por encima el login tarda segundos' })
     .default(12),
+
+  // ─── Sesión ───────────────────────────────────────────────────────────────
+  // Sin default a propósito: un secreto de firma por defecto es una firma que
+  // cualquiera con el repositorio puede reproducir.
+  JWT_SECRET: z
+    .string()
+    .min(32, { message: 'debe tener al menos 32 caracteres; genera uno aleatorio' }),
+  JWT_EXPIRES_IN: z
+    .string()
+    .regex(/^\d+[smhd]$/, { message: 'debe ser una duración como 2h, 30m o 7d' })
+    .default('2h'),
+  COOKIE_NAME: z.string().min(1).default('sion_session'),
+  COOKIE_SECURE: z
+    .enum(['true', 'false'], { message: 'debe ser true o false' })
+    .default('false')
+    .transform((value) => value === 'true'),
+  COOKIE_SAMESITE: z
+    .enum(['lax', 'strict', 'none'], { message: 'debe ser lax, strict o none' })
+    .default('lax'),
+
+  // ─── Políticas de tratamiento de datos ────────────────────────────────────
+  POLICY_VERSION: z.string().min(1, { message: 'identifica la versión vigente, por ejemplo 2026-01' }),
 });
+
+/**
+ * Esquema del API, con la comprobación cruzada de los atributos de la cookie.
+ *
+ * `SameSite=None` sin `Secure` es una combinación que el navegador descarta sin
+ * avisar: el ingreso responde bien y la petición siguiente llega sin sesión.
+ * Vale mucho más que el proceso no arranque a que alguien lo descubra en
+ * producción persiguiendo un fantasma.
+ */
+export const apiEnvSchema = apiEnvShape.refine(
+  (env) => !(env.COOKIE_SAMESITE === 'none' && !env.COOKIE_SECURE),
+  {
+    message:
+      'COOKIE_SAMESITE=none exige COOKIE_SECURE=true; el navegador descarta esa cookie en silencio',
+    path: ['COOKIE_SECURE'],
+  },
+);
 export type ApiEnv = z.infer<typeof apiEnvSchema>;
 
 /**

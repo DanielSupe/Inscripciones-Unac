@@ -33,7 +33,19 @@ export const api = [
   },
   {
     // El repository es la única capa autorizada; el seed corre fuera de la app.
-    files: ['**/*.repository.ts', 'src/shared/database/**', 'prisma/**'],
+    //
+    // Los `*.integration.test.ts` también quedan exentos: una prueba de
+    // integración necesita preparar y limpiar el estado de la base de datos
+    // directamente, y hacerlo a través de la aplicación probaría el código con
+    // el código. La excepción es deliberadamente estrecha: los tests normales
+    // siguen sujetos a la regla, para que un fallo de capas no se cuele
+    // disfrazado de prueba.
+    files: [
+      '**/*.repository.ts',
+      '**/*.integration.test.ts',
+      'src/shared/database/**',
+      'prisma/**',
+    ],
     rules: {
       '@typescript-eslint/no-restricted-imports': 'off',
     },

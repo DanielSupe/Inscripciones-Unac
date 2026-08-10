@@ -1,5 +1,7 @@
 import { apiErrorSchema, type ApiErrorCode } from '@repo/contracts';
 import { config } from './config';
+import { setNotice } from './notice';
+import { notifySessionExpired } from './session-expiry';
 
 /** Error de una llamada al API, ya normalizado al contrato compartido. */
 export class ApiRequestError extends Error {
@@ -55,6 +57,21 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   const payload: unknown = await response.json().catch(() => null);
 
   if (!response.ok && !acceptStatuses.includes(response.status)) {
+    // Un 401 que este endpoint no esperaba significa que la sesión dejó de
+    // valer a mitad de navegación. Se avisa para que el arranque limpie la
+    // caché y lleve a la pantalla de ingreso explicando por qué.
+    //
+    // La consulta de identidad propia acepta el 401 explícitamente, así que
+    // entrar sin sesión no dispara esto: no es una sesión caducada, es no
+    // haberla tenido nunca.
+    //
+    // Un 403 tampoco lo dispara: la sesión sigue siendo válida y expulsar a
+    // alguien por pedir algo que no le toca sería mentirle.
+    if (response.status === 401) {
+      setNotice({ tone: 'info', message: 'Tu sesión caducó. Vuelve a ingresar.' });
+      notifySessionExpired();
+    }
+
     const parsed = apiErrorSchema.safeParse(payload);
     if (parsed.success) {
       throw new ApiRequestError(response.status, parsed.data.error.code, parsed.data.error.message);

@@ -46,6 +46,12 @@ model User {
   /// forzar una migración cuando se añada la verificación.
   emailVerifiedAt DateTime?
 
+  /// Evidencia de qué versión de las políticas de tratamiento de datos aceptó
+  /// esta persona y cuándo (Ley 1581 de 2012). Nulables porque el administrador
+  /// original lo crea el seed y no pasa por el registro.
+  acceptedPolicyVersion String?
+  acceptedPolicyAt      DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

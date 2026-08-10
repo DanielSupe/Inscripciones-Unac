@@ -2,10 +2,22 @@
 
 Plataforma de inscripción de nuevos estudiantes para la Universidad Adventista de Colombia.
 
-> **Estado actual:** solo está montada la base técnica. **Todavía no existe registro de cuenta
-> ni inicio de sesión.** El único usuario que existe es el administrador original, creado por
-> el seed, y no hay forma de entrar como él. El registro, la inscripción, el recibo y la
-> consola de administración llegan en los changes siguientes.
+> **Estado actual:** ya existen registro de cuenta e inicio de sesión, con control de acceso por
+> rol. **Todavía no existen la inscripción, el recibo ni la consola de administración**: las
+> pantallas de los tres roles son marcadores, y las secciones que faltan aparecen en el menú
+> lateral marcadas como «pronto».
+>
+> Tampoco hay recuperación de contraseña —no hay envío de correo en el MVP— ni límite de
+> intentos de ingreso. Ambas cosas están registradas como deuda conocida.
+
+## Primer ingreso
+
+Después de sembrar, entra en http://localhost:5173 con el administrador original: el correo y la
+contraseña que pusiste en `SEED_ADMIN_EMAIL` y `SEED_ADMIN_PASSWORD` de `apps/api/.env`. La
+credencial de ingreso es el **correo**, no el documento.
+
+Para probar el rol de aspirante, crea una cuenta desde «Crear cuenta»: nace siempre como
+aspirante, sin importar lo que se envíe.
 
 ## Requisitos
 

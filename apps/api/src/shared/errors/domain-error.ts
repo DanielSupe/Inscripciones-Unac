@@ -33,6 +33,22 @@ export class ConflictError extends DomainError {
   readonly httpStatus = 409;
 }
 
+/**
+ * Choque contra un índice único de la base de datos.
+ *
+ * Solo la lanza el repository, que es el único que puede detectarla. Lleva el
+ * campo que chocó para poder registrarlo en el servidor; el service decide qué
+ * se le cuenta a quien llama, que en el registro es deliberadamente menos.
+ */
+export class UniqueViolationError extends DomainError {
+  readonly code = 'CONFLICT' as const;
+  readonly httpStatus = 409;
+
+  constructor(readonly fields: string[]) {
+    super(`Violación de unicidad en: ${fields.join(', ')}`);
+  }
+}
+
 /** Hay sesión, pero el rol no alcanza para esta operación. */
 export class ForbiddenError extends DomainError {
   readonly code = 'FORBIDDEN' as const;

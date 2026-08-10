@@ -46,25 +46,17 @@ async function contarAdmins(): Promise<number> {
   return prisma.user.count({ where: { isSystem: true } });
 }
 
-type CuentaCompleta = NonNullable<Awaited<ReturnType<NonNullable<typeof prisma>['user']['findFirst']>>>;
-
 describe.skipIf(!hayBaseDeDatos)('siembra del administrador original', () => {
-  let cuentaDelDesarrollador: CuentaCompleta | null = null;
-
+  // Estas pruebas corren contra el esquema de pruebas, no contra el de
+  // desarrollo, así que pueden ser la única cuenta de sistema sin tocar el
+  // administrador local. Ese aislamiento lo prepara vitest.global-setup.ts;
+  // antes de existir, guardar y restaurar la cuenta era un apaño y falló.
   beforeAll(async () => {
-    // El seed garantiza que exista UNA sola cuenta de sistema, así que estas
-    // pruebas necesitan ser esa cuenta. Se guarda la del desarrollador y se
-    // restaura al terminar: `pnpm test` no puede llevarse por delante el
-    // administrador de su base de datos local.
-    cuentaDelDesarrollador = (await prisma?.user.findFirst({ where: { isSystem: true } })) ?? null;
     await prisma?.user.deleteMany({ where: { isSystem: true } });
   });
 
   afterAll(async () => {
     await prisma?.user.deleteMany({ where: { isSystem: true } });
-    if (cuentaDelDesarrollador) {
-      await prisma?.user.create({ data: cuentaDelDesarrollador });
-    }
     await prisma?.$disconnect();
   });
 

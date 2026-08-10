@@ -5,6 +5,8 @@ import { formatEnvError } from './format';
 const entornoValido = {
   DATABASE_URL: 'postgresql://sion:sion@localhost:5432/sion',
   CORS_ORIGIN: 'http://localhost:5173',
+  JWT_SECRET: 'un-secreto-de-desarrollo-de-treinta-y-dos-o-mas',
+  POLICY_VERSION: '2026-01',
 };
 
 describe('apiEnvSchema', () => {
@@ -19,11 +21,29 @@ describe('apiEnvSchema', () => {
   });
 
   it('rechaza el entorno si falta una variable requerida', () => {
-    const result = apiEnvSchema.safeParse({ CORS_ORIGIN: 'http://localhost:5173' });
+    const { DATABASE_URL: _omitida, ...sinBaseDeDatos } = entornoValido;
+    const result = apiEnvSchema.safeParse(sinBaseDeDatos);
 
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.issues.map((i) => i.path[0])).toContain('DATABASE_URL');
+  });
+
+  it('exige el secreto de sesión y no le pone valor por defecto', () => {
+    // Un default aquí sería una firma que cualquiera con el repositorio puede
+    // reproducir.
+    const { JWT_SECRET: _omitido, ...sinSecreto } = entornoValido;
+    const result = apiEnvSchema.safeParse(sinSecreto);
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues.map((i) => i.path[0])).toContain('JWT_SECRET');
+  });
+
+  it('rechaza un secreto de sesión demasiado corto', () => {
+    const result = apiEnvSchema.safeParse({ ...entornoValido, JWT_SECRET: 'corto' });
+
+    expect(result.success).toBe(false);
   });
 
   it('rechaza una variable presente con formato inválido', () => {
@@ -38,6 +58,7 @@ describe('apiEnvSchema', () => {
     // Este es el punto: sin esto, configurar un servidor nuevo se convierte en
     // arrancar, corregir una variable, arrancar otra vez.
     const result = apiEnvSchema.safeParse({
+      ...entornoValido,
       DATABASE_URL: 'no-es-url',
       CORS_ORIGIN: 'tampoco',
       PORT: 'abc',
@@ -57,6 +78,42 @@ describe('apiEnvSchema', () => {
     // El servidor en producción no tiene por qué conocer la contraseña del
     // administrador original.
     expect(apiEnvSchema.safeParse(entornoValido).success).toBe(true);
+  });
+});
+
+describe('coherencia de la cookie de sesión', () => {
+  it('rechaza SameSite=none sin Secure', () => {
+    // El navegador descarta esa cookie en silencio: el ingreso respondería bien
+    // y la petición siguiente llegaría sin sesión. Es mucho mejor no arrancar.
+    const result = apiEnvSchema.safeParse({
+      ...entornoValido,
+      COOKIE_SAMESITE: 'none',
+      COOKIE_SECURE: 'false',
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.issues[0]?.message).toContain('COOKIE_SECURE=true');
+  });
+
+  it('acepta la combinación de producción', () => {
+    const result = apiEnvSchema.safeParse({
+      ...entornoValido,
+      COOKIE_SAMESITE: 'none',
+      COOKIE_SECURE: 'true',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('acepta la combinación de desarrollo local', () => {
+    const result = apiEnvSchema.safeParse({
+      ...entornoValido,
+      COOKIE_SAMESITE: 'lax',
+      COOKIE_SECURE: 'false',
+    });
+
+    expect(result.success).toBe(true);
   });
 });
 
@@ -115,14 +172,18 @@ describe('formatEnvError', () => {
     expect(mensaje).not.toContain(secreto.slice(0, 3));
   });
 
-  it('lista cada problema en su propia línea', () => {
-    const result = apiEnvSchema.safeParse({ DATABASE_URL: 'x', CORS_ORIGIN: 'y' });
+  it('lista cada problema en su propia línea y los cuenta', () => {
+    const result = apiEnvSchema.safeParse({
+      ...entornoValido,
+      DATABASE_URL: 'x',
+      CORS_ORIGIN: 'y',
+    });
     expect(result.success).toBe(false);
     if (result.success) return;
 
     const mensaje = formatEnvError(result.error, 'prueba');
     expect(mensaje).toContain('DATABASE_URL');
     expect(mensaje).toContain('CORS_ORIGIN');
-    expect(mensaje).toContain('2 variables');
+    expect(mensaje).toContain(`${result.error.issues.length} variables`);
   });
 });

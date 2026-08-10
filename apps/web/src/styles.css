@@ -100,3 +100,299 @@ a:focus-visible {
   color: var(--tenue);
   font-size: 0.9rem;
 }
+
+/* ─── Marco de la zona autenticada ─────────────────────────────────────────── */
+
+.salto {
+  position: absolute;
+  left: -9999px;
+}
+.salto:focus {
+  left: 0.5rem;
+  top: 0.5rem;
+  z-index: 10;
+  background: #fff;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+}
+
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.85rem 1.5rem;
+  background: #fff;
+  border-bottom: 1px solid var(--borde);
+}
+
+.marca {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.marca__sub {
+  font-weight: 400;
+  color: var(--tenue);
+}
+
+.usuario {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+.usuario__correo {
+  color: var(--tenue);
+}
+.usuario button {
+  margin-top: 0;
+}
+
+.etiqueta-rol {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  color: var(--tenue);
+}
+
+.shell__cuerpo {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 15rem 1fr;
+}
+
+.lateral {
+  border-right: 1px solid var(--borde);
+  padding: 1.5rem 1rem;
+  background: #fff;
+}
+.lateral__titulo {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tenue);
+}
+.lateral ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.lateral a,
+.lateral__pronto {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 4px;
+  text-decoration: none;
+  color: var(--texto);
+  font-size: 0.95rem;
+}
+.lateral a:hover {
+  background: #f0f0f0;
+}
+.lateral a[aria-current='page'] {
+  background: #eef2fd;
+  color: #1a4fd8;
+  font-weight: 500;
+}
+.lateral__pronto {
+  color: #a0a0a0;
+  cursor: default;
+}
+.lateral__pronto em {
+  font-style: normal;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.contenido {
+  padding: 2rem 2rem 3rem;
+  max-width: 46rem;
+}
+
+@media (max-width: 768px) {
+  .shell__cuerpo {
+    grid-template-columns: 1fr;
+  }
+  .lateral {
+    border-right: none;
+    border-bottom: 1px solid var(--borde);
+    padding: 0.75rem 1rem;
+  }
+  .lateral ul {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .contenido {
+    padding: 1.5rem 1rem 2.5rem;
+  }
+}
+
+/* ─── Formularios ──────────────────────────────────────────────────────────── */
+
+.pagina--estrecha {
+  max-width: 26rem;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: #fff;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  padding: 1.75rem;
+}
+.formulario h1 {
+  font-size: 1.4rem;
+  margin: 0 0 0.25rem;
+}
+.formulario__intro,
+.formulario__pie {
+  color: var(--tenue);
+  font-size: 0.9rem;
+}
+.formulario__pie {
+  margin: 0.75rem 0 0;
+}
+.formulario label {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.formulario input,
+.formulario select {
+  font: inherit;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  background: #fff;
+}
+.formulario input:focus-visible,
+.formulario select:focus-visible {
+  outline: 2px solid #1a4fd8;
+  outline-offset: 1px;
+}
+.formulario input[aria-invalid='true'] {
+  border-color: var(--error);
+}
+.formulario button[type='submit'] {
+  margin-top: 1.25rem;
+  padding: 0.6rem;
+  background: #1a4fd8;
+  border-color: #1a4fd8;
+  color: #fff;
+  font-weight: 500;
+}
+.formulario button[type='submit']:disabled {
+  opacity: 0.6;
+}
+
+.campo__error {
+  color: var(--error);
+  font-size: 0.85rem;
+}
+.campo__ayuda {
+  color: var(--tenue);
+  font-size: 0.85rem;
+}
+
+.casilla {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.casilla label {
+  margin-top: 0;
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+.casilla input {
+  margin-top: 0.2rem;
+}
+
+.aviso-caja {
+  padding: 0.6rem 0.8rem;
+  border-radius: 4px;
+  border-left: 4px solid;
+  font-size: 0.9rem;
+  margin: 0.5rem 0;
+}
+.aviso-caja--error {
+  border-color: var(--error);
+  background: #fdf2f2;
+}
+.aviso-caja--exito {
+  border-color: var(--ok);
+  background: #f1f8f3;
+}
+.aviso-caja--info {
+  border-color: var(--alerta);
+  background: #fdf6f0;
+}
+
+/* ─── Varios ───────────────────────────────────────────────────────────────── */
+
+.acciones {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+.boton {
+  display: inline-block;
+  padding: 0.5rem 1.1rem;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  background: #fff;
+  text-decoration: none;
+  color: var(--texto);
+  font-size: 0.95rem;
+}
+.boton--primario {
+  background: #1a4fd8;
+  border-color: #1a4fd8;
+  color: #fff;
+}
+
+.ficha {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.4rem 1.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--borde);
+  font-size: 0.9rem;
+}
+.ficha dt {
+  color: var(--tenue);
+}
+.ficha dd {
+  margin: 0;
+}
+
+.prosa h2 {
+  margin-top: 1.75rem;
+  font-size: 1rem;
+}
+.prosa p {
+  color: #333;
+}
