@@ -2,13 +2,60 @@
 
 Plataforma de inscripción de nuevos estudiantes para la Universidad Adventista de Colombia.
 
-> **Estado actual:** ya existen registro de cuenta e inicio de sesión, con control de acceso por
-> rol. **Todavía no existen la inscripción, el recibo ni la consola de administración**: las
-> pantallas de los tres roles son marcadores, y las secciones que faltan aparecen en el menú
-> lateral marcadas como «pronto».
+> **Estado actual:** un aspirante ya puede crear cuenta, entrar, diligenciar su inscripción en
+> cuatro pasos, adjuntar sus documentos y descargar el recibo de pago.
+>
+> **Falta la consola de administración**: revisar inscripciones, verificar pagos, aprobar o
+> rechazar, y el CRUD de usuarios y periodos. Hasta que exista, nadie puede aprobar una
+> inscripción, así que el rol de estudiante no se alcanza todavía.
 >
 > Tampoco hay recuperación de contraseña —no hay envío de correo en el MVP— ni límite de
 > intentos de ingreso. Ambas cosas están registradas como deuda conocida.
+
+## Almacenamiento de documentos
+
+Los documentos que adjunta el aspirante —cédula y resultados ICFES— van a un bucket compatible
+con S3. **El archivo nunca pasa por el backend**: el API valida tipo y tamaño, firma un permiso
+temporal, y el navegador sube directamente al bucket.
+
+Para trabajar en el proyecto necesitas un bucket propio. Los pasos, en la consola de AWS:
+
+1. **Crear el bucket.** Elige una región y anótala. Deja el **bloqueo de acceso público
+   activado en sus cuatro casillas**: todo acceso se concede con permisos firmados.
+2. **Configurar su CORS.** Pestaña *Permisos* → *Uso compartido de recursos entre orígenes*:
+
+   ```json
+   [
+     {
+       "AllowedHeaders": ["*"],
+       "AllowedMethods": ["PUT", "GET"],
+       "AllowedOrigins": ["http://localhost:5173"],
+       "ExposeHeaders": ["ETag"],
+       "MaxAgeSeconds": 3000
+     }
+   ]
+   ```
+
+   Sin barra final en el origen. Al desplegar hay que añadir aquí el dominio del frontend.
+
+   ⚠ Este CORS es **del bucket** y no tiene nada que ver con `CORS_ORIGIN` del API. El
+   navegador le habla a los dos por separado, así que los dos deben autorizarlo por separado.
+   Es el fallo más habitual al montar esto.
+
+3. **Crear un usuario de servicio** en IAM con una política que le permita únicamente
+   `s3:PutObject`, `s3:GetObject` y `s3:DeleteObject` sobre `arn:aws:s3:::TU-BUCKET/*`. Sin
+   `s3:ListBucket`: el backend siempre conoce la clave exacta, y no darlo significa que una
+   credencial filtrada no pueda ni enumerar qué documentos existen.
+4. **Copiar sus credenciales** a `S3_ACCESS_KEY_ID` y `S3_SECRET_ACCESS_KEY` en `apps/api/.env`.
+
+Después, comprueba que todo quedó bien:
+
+```bash
+pnpm --filter @repo/api run s3:check
+```
+
+Firma una subida, la realiza, lee el archivo, verifica que el CORS aceptaría al navegador, y
+borra lo que creó. Si algo falla, dice exactamente qué.
 
 ## Primer ingreso
 

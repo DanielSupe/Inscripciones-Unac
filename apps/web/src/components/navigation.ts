@@ -22,12 +22,12 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
   APPLICANT: [
     { label: 'Mi proceso', to: '/aspirante' },
-    { label: 'Inscripción' },
-    { label: 'Recibo de pago' },
+    { label: 'Inscripción', to: '/aspirante/inscripcion' },
+    { label: 'Recibo de pago', to: '/aspirante/recibo' },
   ],
   STUDENT: [
     { label: 'Mi inscripción', to: '/estudiante' },
-    { label: 'Mi recibo' },
+    { label: 'Mi recibo', to: '/estudiante/recibo' },
   ],
   ADMIN: [
     { label: 'Panel', to: '/admin' },

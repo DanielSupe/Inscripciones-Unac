@@ -7,6 +7,10 @@ const entornoValido = {
   CORS_ORIGIN: 'http://localhost:5173',
   JWT_SECRET: 'un-secreto-de-desarrollo-de-treinta-y-dos-o-mas',
   POLICY_VERSION: '2026-01',
+  S3_REGION: 'us-east-1',
+  S3_BUCKET: 'bucket-de-prueba',
+  S3_ACCESS_KEY_ID: 'AKIAIOSFODNN7EXAMPLE',
+  S3_SECRET_ACCESS_KEY: 'clave-secreta-de-prueba-suficientemente-larga',
 };
 
 describe('apiEnvSchema', () => {
@@ -78,6 +82,42 @@ describe('apiEnvSchema', () => {
     // El servidor en producción no tiene por qué conocer la contraseña del
     // administrador original.
     expect(apiEnvSchema.safeParse(entornoValido).success).toBe(true);
+  });
+});
+
+describe('almacenamiento de documentos', () => {
+  it('exige las credenciales del bucket, sin valor por defecto', () => {
+    // Guardan documentos de identidad: mismo trato que el secreto de sesión.
+    for (const variable of ['S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_REGION']) {
+      const { [variable]: _omitida, ...sinEsa } = entornoValido as Record<string, unknown>;
+      const result = apiEnvSchema.safeParse(sinEsa);
+
+      expect(result.success).toBe(false);
+      if (result.success) continue;
+      expect(result.error.issues.map((i) => String(i.path[0]))).toContain(variable);
+    }
+  });
+
+  it('aplica los valores por defecto de subida y firma', () => {
+    const result = apiEnvSchema.safeParse(entornoValido);
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.S3_PRESIGN_EXPIRES_SECONDS).toBe(300);
+    expect(result.data.MAX_UPLOAD_BYTES).toBe(5_242_880);
+    expect(result.data.S3_FORCE_PATH_STYLE).toBe(false);
+    expect(result.data.RECEIPT_DUE_DAYS).toBe(15);
+  });
+
+  it('rechaza una vida de permiso absurdamente larga o corta', () => {
+    // Muy corta no da tiempo a subir; muy larga amplía sin motivo la ventana en
+    // la que un enlace filtrado sigue sirviendo.
+    expect(
+      apiEnvSchema.safeParse({ ...entornoValido, S3_PRESIGN_EXPIRES_SECONDS: '5' }).success,
+    ).toBe(false);
+    expect(
+      apiEnvSchema.safeParse({ ...entornoValido, S3_PRESIGN_EXPIRES_SECONDS: '99999' }).success,
+    ).toBe(false);
   });
 });
 

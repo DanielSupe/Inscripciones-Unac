@@ -28,7 +28,7 @@
 - [x] 4.1 Crear el repositorio con la consulta de programas ofertados y la del periodo abierto en una fecha dada
 - [x] 4.2 Crear el service con la resolución del periodo vigente y la comprobación de que un programa está ofertado
 - [x] 4.3 Crear los endpoints públicos de consulta de programas y del periodo abierto, y la respuesta clara cuando no hay ninguno
-- [ ] 4.4 Probar el service: periodo abierto, antes de abrir, después de cerrar, y sin ningún periodo configurado
+- [x] 4.4 Probar el service: periodo abierto, antes de abrir, después de cerrar, y sin ningún periodo configurado
 
 ## 5. Módulo `enrollment`: máquina de estados
 
@@ -36,7 +36,7 @@
 - [x] 5.2 Implementar la condición de envío: datos completos, documentos completos y periodo abierto
 - [x] 5.3 Implementar la condición de aprobación: pago verificado. La usará el change 4
 - [x] 5.4 Implementar la transición de corrección, que devuelve una inscripción rechazada a estado editable
-- [ ] 5.5 Probar exhaustivamente la máquina de estados, incluidas todas las transiciones no permitidas
+- [x] 5.5 Probar exhaustivamente la máquina de estados, incluidas todas las transiciones no permitidas
 
 ## 6. Módulo `enrollment`: datos y pertenencia
 
@@ -57,7 +57,7 @@
 - [x] 7.4 Implementar la firma del permiso de lectura, previa comprobación de pertenencia
 - [x] 7.5 Impedir adjuntar o sustituir documentos cuando la inscripción no es editable
 - [x] 7.6 Crear el controller y las rutas del módulo
-- [ ] 7.7 Probar el service con un doble del almacenamiento: tipo no admitido, tamaño excedido, sustitución, y acceso a un documento ajeno
+- [x] 7.7 Probar el service con un doble del almacenamiento: tipo no admitido, tamaño excedido, sustitución, y acceso a un documento ajeno
 
 ## 8. Módulo `receipt`
 
@@ -66,44 +66,44 @@
 - [x] 8.3 Implementar la consulta del recibo con comprobación de pertenencia
 - [x] 8.4 Implementar la generación del PDF con `pdfkit`, con los datos que exige la spec
 - [x] 8.5 Crear el controller y las rutas, incluida la descarga con su tipo de contenido y nombre de archivo
-- [ ] 8.6 Probar que reenviar no emite un recibo nuevo y que el valor no cambia al cambiar la tarifa del periodo
+- [x] 8.6 Probar que reenviar no emite un recibo nuevo y que el valor no cambia al cambiar la tarifa del periodo
 
 ## 9. Frontend: el wizard
 
-- [ ] 9.1 Crear la feature de inscripción con sus hooks de consulta y mutación, y sus query keys
-- [ ] 9.2 Crear el armazón del wizard con los cuatro pasos, la indicación de en cuál se está y la navegación entre ellos
-- [ ] 9.3 Implementar el paso de datos personales
-- [ ] 9.4 Implementar el paso de datos académicos previos
-- [ ] 9.5 Implementar el paso de aspiración, con los programas y el periodo tomados del catálogo
-- [ ] 9.6 Implementar el paso de documentos, con la subida directa al almacenamiento y el estado de cada adjunto
-- [ ] 9.7 Hacer que al retomar una inscripción se abra el primer paso pendiente
-- [ ] 9.8 Implementar el envío, con el resumen de qué falta cuando se rechaza
+- [x] 9.1 Crear la feature de inscripción con sus hooks de consulta y mutación, y sus query keys
+- [x] 9.2 Crear el armazón del wizard con los cuatro pasos, la indicación de en cuál se está y la navegación entre ellos
+- [x] 9.3 Implementar el paso de datos personales
+- [x] 9.4 Implementar el paso de datos académicos previos
+- [x] 9.5 Implementar el paso de aspiración, con los programas y el periodo tomados del catálogo
+- [x] 9.6 Implementar el paso de documentos, con la subida directa al almacenamiento y el estado de cada adjunto
+- [x] 9.7 Hacer que al retomar una inscripción se abra el primer paso pendiente
+- [x] 9.8 Implementar el envío, con el resumen de qué falta cuando se rechaza
 
 ## 10. Frontend: consulta y recibo
 
-- [ ] 10.1 Convertir la pantalla del aspirante en la consulta real del proceso, con su estado y el motivo del rechazo si lo hay
-- [ ] 10.2 Añadir la acción de corregir y reenviar cuando la inscripción está rechazada
-- [ ] 10.3 Crear la pantalla del recibo, con sus datos y la descarga del PDF
-- [ ] 10.4 Activar en el menú lateral las secciones de inscripción y recibo, que hasta ahora estaban marcadas como «pronto»
-- [ ] 10.5 Convertir la pantalla del estudiante en la consulta en solo lectura de su inscripción aprobada y su recibo
-- [ ] 10.6 Mostrar un mensaje claro, y no un formulario, cuando no hay ningún periodo abierto
+- [x] 10.1 Convertir la pantalla del aspirante en la consulta real del proceso, con su estado y el motivo del rechazo si lo hay
+- [x] 10.2 Añadir la acción de corregir y reenviar cuando la inscripción está rechazada
+- [x] 10.3 Crear la pantalla del recibo, con sus datos y la descarga del PDF
+- [x] 10.4 Activar en el menú lateral las secciones de inscripción y recibo, que hasta ahora estaban marcadas como «pronto»
+- [x] 10.5 Convertir la pantalla del estudiante en la consulta en solo lectura de su inscripción aprobada y su recibo
+- [x] 10.6 Mostrar un mensaje claro, y no un formulario, cuando no hay ningún periodo abierto
 
 ## 11. Pruebas
 
-- [ ] 11.1 Probar que un aspirante no puede consultar ni modificar la inscripción de otro, y que la respuesta es indistinguible de que no exista
-- [ ] 11.2 Probar que un aspirante no puede consultar el recibo ni los documentos de otro
-- [ ] 11.3 Probar que el estado enviado en el cuerpo de una petición de guardado se ignora
-- [ ] 11.4 Probar el envío incompleto: falta de datos y falta de documentos, cada uno con su mensaje
-- [ ] 11.5 Probar que enviar dos veces no duplica el recibo
-- [ ] 11.6 Probar el ciclo de rechazo y corrección de punta a punta
-- [ ] 11.7 Probar que no se puede iniciar una inscripción con el periodo cerrado, y que una empezada tampoco se puede enviar
-- [ ] 11.8 Probar que un aspirante solo puede tener una inscripción por periodo, y que puede tener otra en un periodo distinto
-- [ ] 11.9 Probar el wizard en el frontend: guardado por pasos, retomar donde se dejó, y errores por campo
-- [ ] 11.10 Probar la pantalla de proceso en sus estados: diligenciando, enviada, rechazada con motivo, y aprobada
+- [x] 11.1 Probar que un aspirante no puede consultar ni modificar la inscripción de otro, y que la respuesta es indistinguible de que no exista
+- [x] 11.2 Probar que un aspirante no puede consultar el recibo ni los documentos de otro
+- [x] 11.3 Probar que el estado enviado en el cuerpo de una petición de guardado se ignora
+- [x] 11.4 Probar el envío incompleto: falta de datos y falta de documentos, cada uno con su mensaje
+- [x] 11.5 Probar que enviar dos veces no duplica el recibo
+- [x] 11.6 Probar el ciclo de rechazo y corrección de punta a punta
+- [x] 11.7 Probar que no se puede iniciar una inscripción con el periodo cerrado, y que una empezada tampoco se puede enviar
+- [x] 11.8 Probar que un aspirante solo puede tener una inscripción por periodo, y que puede tener otra en un periodo distinto
+- [x] 11.9 Probar el wizard en el frontend: guardado por pasos, retomar donde se dejó, y errores por campo
+- [x] 11.10 Probar la pantalla de proceso en sus estados: diligenciando, enviada, rechazada con motivo, y aprobada
 
 ## 12. Documentación y cierre
 
-- [ ] 12.1 Añadir las nueve variables nuevas a `apps/api/.env.example`, con su valor de ejemplo y la advertencia de que las credenciales del bucket son secretas
-- [ ] 12.2 Documentar en el `README.md` cómo montar el bucket y su CORS, porque sin eso el proyecto no arranca en una máquina nueva
-- [ ] 12.3 Ejecutar `pnpm lint`, `pnpm typecheck` y `pnpm test` y dejarlos en verde
-- [ ] 12.4 Verificar a mano el recorrido completo desde el navegador: diligenciar los cuatro pasos, subir los dos documentos, enviar, y descargar el recibo
+- [x] 12.1 Añadir las nueve variables nuevas a `apps/api/.env.example`, con su valor de ejemplo y la advertencia de que las credenciales del bucket son secretas
+- [x] 12.2 Documentar en el `README.md` cómo montar el bucket y su CORS, porque sin eso el proyecto no arranca en una máquina nueva
+- [x] 12.3 Ejecutar `pnpm lint`, `pnpm typecheck` y `pnpm test` y dejarlos en verde
+- [x] 12.4 Verificar a mano el recorrido completo desde el navegador: diligenciar los cuatro pasos, subir los dos documentos, enviar, y descargar el recibo

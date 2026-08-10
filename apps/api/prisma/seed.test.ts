@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { parseDatabaseUrl } from '../src/shared/database/connection';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const apiRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -38,7 +39,7 @@ function sembrar(extra: Record<string, string> = {}): Promise<{ code: number; st
 }
 
 const prisma = hayBaseDeDatos
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString: DATABASE_URL ?? '' }) })
+  ? new PrismaClient({ adapter: new PrismaPg({ connectionString: DATABASE_URL ?? '' }, { schema: parseDatabaseUrl(DATABASE_URL ?? '').schema }) })
   : null;
 
 async function contarAdmins(): Promise<number> {

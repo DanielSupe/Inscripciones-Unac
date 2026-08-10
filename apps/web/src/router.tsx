@@ -10,7 +10,14 @@ import type { Role, SessionUser } from '@repo/contracts';
 import { homePathFor, sessionQueryOptions } from './features/auth/api/auth-queries';
 import { AppShell } from './components/app-shell';
 import { LoginPage, PoliciesPage, PublicHome, RegisterPage } from './routes/public-routes';
-import { AdminHome, ApplicantHome, StudentHome } from './routes/role-routes';
+import {
+  AdminHome,
+  ApplicantEnrollment,
+  ApplicantHome,
+  ApplicantReceipt,
+  StudentHome,
+  StudentReceipt,
+} from './routes/role-routes';
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -85,24 +92,50 @@ function requireRole(role: Role) {
   };
 }
 
-const applicantRoute = createRoute({
+/**
+ * Zona del aspirante. El guard vive en la ruta padre, así que las hijas lo
+ * heredan y no hay forma de añadir una pantalla sin protegerla.
+ */
+const applicantLayout = createRoute({
   getParentRoute: () => protectedLayout,
-  path: '/aspirante',
+  id: 'aspirante',
   beforeLoad: requireRole('APPLICANT'),
-  component: function ApplicantScreen() {
-    const { session } = protectedLayout.useRouteContext();
-    return <ApplicantHome session={session} />;
-  },
 });
 
-const studentRoute = createRoute({
+const applicantHomeRoute = createRoute({
+  getParentRoute: () => applicantLayout,
+  path: '/aspirante',
+  component: ApplicantHome,
+});
+
+const applicantEnrollmentRoute = createRoute({
+  getParentRoute: () => applicantLayout,
+  path: '/aspirante/inscripcion',
+  component: ApplicantEnrollment,
+});
+
+const applicantReceiptRoute = createRoute({
+  getParentRoute: () => applicantLayout,
+  path: '/aspirante/recibo',
+  component: ApplicantReceipt,
+});
+
+const studentLayout = createRoute({
   getParentRoute: () => protectedLayout,
-  path: '/estudiante',
+  id: 'estudiante',
   beforeLoad: requireRole('STUDENT'),
-  component: function StudentScreen() {
-    const { session } = protectedLayout.useRouteContext();
-    return <StudentHome session={session} />;
-  },
+});
+
+const studentHomeRoute = createRoute({
+  getParentRoute: () => studentLayout,
+  path: '/estudiante',
+  component: StudentHome,
+});
+
+const studentReceiptRoute = createRoute({
+  getParentRoute: () => studentLayout,
+  path: '/estudiante/recibo',
+  component: StudentReceipt,
 });
 
 const adminRoute = createRoute({
@@ -120,7 +153,15 @@ const routeTree = rootRoute.addChildren([
   policiesRoute,
   loginRoute,
   registerRoute,
-  protectedLayout.addChildren([applicantRoute, studentRoute, adminRoute]),
+  protectedLayout.addChildren([
+    applicantLayout.addChildren([
+      applicantHomeRoute,
+      applicantEnrollmentRoute,
+      applicantReceiptRoute,
+    ]),
+    studentLayout.addChildren([studentHomeRoute, studentReceiptRoute]),
+    adminRoute,
+  ]),
 ]);
 
 export function createAppRouter(queryClient: QueryClient) {

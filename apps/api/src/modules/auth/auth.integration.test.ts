@@ -4,6 +4,7 @@ import request from 'supertest';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { parseDatabaseUrl } from '../../shared/database/connection';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../../app';
 import { requireAuth, requireRole } from '../../shared/middleware/require-auth';
@@ -17,7 +18,7 @@ const PREFIJO_DOC = '99900';
 const DOMINIO = '@prueba.local';
 
 const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }, { schema: parseDatabaseUrl(process.env.DATABASE_URL ?? '').schema }),
 });
 
 async function limpiar(): Promise<void> {

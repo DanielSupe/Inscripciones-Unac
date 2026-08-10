@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { parseDatabaseUrl } from '../src/shared/database/connection';
 import bcrypt from 'bcrypt';
 import { seedEnv } from '@repo/config/seed';
 import { seedCatalog } from './seed-catalog';
 
 // El seed corre fuera de la aplicación, así que abre su propia conexión con la
 // configuración de siembra en vez de reutilizar el cliente del API.
-const adapter = new PrismaPg({ connectionString: seedEnv.DATABASE_URL });
+const adapter = new PrismaPg({ connectionString: seedEnv.DATABASE_URL }, { schema: parseDatabaseUrl(seedEnv.DATABASE_URL).schema });
 const prisma = new PrismaClient({ adapter });
 
 /**
