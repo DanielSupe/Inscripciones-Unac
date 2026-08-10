@@ -1,32 +1,162 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  # Proyecto: Inscripciones UNAC — plataforma SION
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Sistema de inscripción de nuevos estudiantes para la Universidad Adventista de
+  Colombia (UNAC). Replica el flujo de la plataforma SION: un aspirante crea una
+  cuenta, inicia sesión, diligencia su inscripción en un wizard, sube documentos
+  y obtiene un recibo de pago. Un administrador gestiona usuarios, verifica pagos
+  y aprueba inscripciones.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  ## Dominio
+
+  Tres roles, con permisos claramente separados:
+    - APPLICANT (aspirante) — se inscribe y consulta el estado de su proceso.
+    - STUDENT (estudiante)  — aspirante cuya inscripción fue aprobada.
+    - ADMIN                 — CRUD de usuarios (incluye crear otros ADMIN), CRUD
+                              de periodos académicos, verificación de pagos y
+                              revisión de inscripciones. Existe un admin semilla
+                              creado por seed, no eliminable.
+
+  Regla de modelado central: `role` (permisos) y el estado de la inscripción
+  (avance del proceso) son campos SEPARADOS y nunca se fusionan. Aprobar una
+  inscripción es lo único que promueve a un usuario de APPLICANT a STUDENT, y esa
+  promoción es un efecto de la transición de estado, no una edición directa del
+  rol. El admin puede crear usuarios APPLICANT o ADMIN, nunca STUDENT.
+
+  Dos ejes de estado independientes:
+    enrollment: DRAFT -> SUBMITTED -> UNDER_REVIEW -> APPROVED | REJECTED
+    payment:    PENDING -> VERIFIED
+
+  Aprobar exige que el pago esté VERIFIED. El rechazo lleva un motivo escrito y
+  devuelve la inscripción a estado editable para que el aspirante la reenvíe.
+  Las transiciones se validan en el service; ningún endpoint acepta el estado
+  como campo escribible del payload.
+
+  ## Stack
+
+  - Monorepo:      Turborepo + pnpm workspaces, TypeScript en todo el repo.
+  - Frontend:      Vite + React + TanStack Router + TanStack Query.
+  - Backend:       Express + Prisma.
+  - Base de datos: PostgreSQL en Docker para desarrollo local, junto a Adminer
+                   para inspección desde el navegador. En producción, Postgres
+                   gestionado vía `DATABASE_URL`.
+  - Archivos:      S3 con URLs prefirmadas. El navegador sube directo al bucket;
+                   el archivo nunca pasa por el backend. En desarrollo local se
+                   usa MinIO en el mismo docker-compose, hablando S3 estándar y
+                   cambiando solo el endpoint por variable de entorno.
+  - Recibo:        PDF generado en el backend con `pdfkit` y archivado en S3.
+                   Puppeteer queda descartado por peso en planes gratuitos.
+  - Validación:    Zod, con esquemas compartidos entre front y back desde
+                   `packages/contracts` — un solo esquema valida el formulario y
+                   el endpoint.
+
+  Estructura:
+    apps/web                Vite + React
+    apps/api                Express + Prisma
+    packages/contracts      esquemas Zod, DTOs y enums de dominio compartidos
+    packages/config         carga y validación de variables de entorno
+    packages/tsconfig       configuraciones base de TypeScript
+    packages/eslint-config  reglas de lint compartidas
+    docker-compose.yml      postgres + adminer (+ minio cuando entren archivos)
+
+  ## Arquitectura
+
+  Organización por módulos de dominio. Cada módulo del backend es una carpeta
+  autocontenida bajo `apps/api/src/modules/<module>/` con las capas clásicas:
+
+    routes -> controller -> service -> repository -> prisma
+
+  Reglas de capas, no negociables:
+    - El controller solo traduce HTTP, valida entrada con Zod y mapea la
+      respuesta. Sin lógica de negocio y sin Prisma.
+    - El service concentra las reglas de negocio y las transiciones de estado.
+      No conoce `req`/`res` ni tipos de Express.
+    - El repository es el único lugar que toca el cliente de Prisma.
+    - Los módulos se comunican a través de services, nunca importando el
+      repository de otro módulo.
+
+  El frontend se organiza en features espejo de los módulos del backend, con las
+  rutas en TanStack Router y todo el acceso a datos vía TanStack Query.
+
+  ## Configuración y despliegue
+
+  Nada hardcodeado. Cero URLs, secretos, puertos, orígenes CORS, credenciales o
+  tarifas literales en el código. Toda configuración entra por variables de
+  entorno, se carga y valida en `packages/config` con Zod, y la aplicación falla
+  al arrancar si falta o es inválida alguna variable requerida. Cada app mantiene
+  un `.env.example` versionado y completo.
+
+  Destino de despliegue: frontend en Vercel, backend en un host de tier gratuito
+  (Render/Railway/Fly), Postgres gestionado y bucket S3. Restricciones que deben
+  respetarse desde el diseño:
+    - Front y back viven en dominios distintos: las cookies de sesión requieren
+      `SameSite=None; Secure` y CORS con credenciales contra un origen exacto
+      tomado de env, nunca `*`.
+    - No hay disco persistente en el host del backend: no se escriben archivos
+      locales, y los adjuntos nunca se enrutan a través del backend.
+    - Vite inyecta las variables `VITE_*` en tiempo de build: cambiarlas exige un
+      redespliegue del frontend. Tenerlo en cuenta al decidir qué se configura en
+      build y qué en runtime.
+
+  ## Convenciones
+
+  - Código, identificadores, nombres de modelos, campos y comentarios en inglés.
+  - Texto visible al usuario y artefactos de OpenSpec en español.
+  - Los mensajes de error de la API son neutrales y no revelan si un documento o
+    correo ya existe en el sistema.
+  - Los usuarios se eliminan de forma lógica (soft delete), nunca física: hay
+    inscripciones y recibos que dependen de ellos.
+
+  ## Decisiones ya cerradas
+
+  No volver a plantearlas al escribir artefactos:
+    - La contraseña se define en el formulario de registro. No hay envío de
+      correo en el MVP, pero el modelo deja espacio para verificarlo después.
+    - El registro pide tipo y número de documento, correo con confirmación,
+      contraseña y aceptación de políticas. Los nombres se piden en el wizard.
+    - El formulario de inscripción es un wizard multi-paso que guarda en DRAFT en
+      cada paso, con bloques de datos personales, académicos previos y
+      aspiración. No hay bloque específico de la denominación.
+    - Los documentos que se suben son el documento de identidad y los resultados
+      ICFES. No se piden diploma ni foto.
+    - Los programas académicos y los tipos de documento se siembran por seed. Los
+      periodos académicos sí los administra el ADMIN, con fechas de apertura y
+      cierre y la tarifa de inscripción del semestre.
+    - La sesión es un único JWT de vida corta en cookie httpOnly, sin refresh.
+
+rules:
+  proposal:
+    - 'Escribir en español, en prosa clara y sin relleno.'
+    - 'Incluir siempre una sección "Fuera de alcance" que liste explícitamente lo que este change NO hace.'
+    - 'Nombrar los roles afectados (APPLICANT, STUDENT, ADMIN) cuando el change toque permisos o visibilidad de datos.'
+    - 'Declarar explícitamente cualquier supuesto nuevo que tome el change.'
+
+  specs:
+    - 'Escribir requisitos observables desde afuera; qué ve o puede hacer un rol concreto, no cómo se implementa.'
+    - 'Cada requisito que dependa del rol debe decir qué ocurre para los roles que NO están autorizados.'
+    - 'Cubrir los caminos de error junto al camino feliz, incluyendo datos duplicados, validación fallida, sesión ausente o expirada, permiso insuficiente y transición de estado inválida.'
+    - 'No mencionar Prisma, Express, TanStack ni ningún detalle de implementación; eso pertenece a design.md.'
+
+  design:
+    - 'Documentar el modelo de datos afectado y las variables de entorno nuevas o modificadas, con su valor de ejemplo para .env.example.'
+    - 'Justificar las decisiones que tengan alternativas razonables, indicando qué se descartó y por qué.'
+    - 'Señalar el impacto en el despliegue cuando la decisión afecte CORS, cookies, build-time frente a runtime, o persistencia de archivos.'
+    - 'Respetar la separación de capas controller/service/repository al describir dónde vive cada pieza de lógica.'
+
+  tasks:
+    - 'Ordenar las tareas de forma ejecutable, con el contrato y el modelo de datos primero, luego el backend por capas, luego el frontend y al final las pruebas.'
+    - 'Cada tarea debe ser verificable por sí sola y caber en menos de dos horas.'
+    - 'Incluir una tarea explícita para actualizar .env.example cuando el change introduzca variables de entorno.'
+    - 'Incluir las tareas de prueba de los services de negocio y de los endpoints que cambien permisos o transiciones de estado.'
+
+operations:
+  apply:
+    guidance:
+      - 'Antes de codear un módulo nuevo, revisar un módulo existente y replicar su estructura de capas y sus nombres de archivo.'
+      - 'No introducir dependencias nuevas sin decirlo explícitamente y explicar por qué no basta con lo que ya está en el repo.'
+      - 'Si una tarea obliga a hardcodear un valor de configuración, detenerse y plantearlo; es señal de que falta una variable de entorno.'
+  archive:
+    guidance:
+      - 'Confirmar que .env.example y la documentación de arranque local quedaron al día antes de archivar.'
