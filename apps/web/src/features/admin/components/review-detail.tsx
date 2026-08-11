@@ -7,7 +7,6 @@ import {
   SHIFT_LABELS,
 } from '@repo/contracts';
 import { ApiRequestError } from '../../../lib/http';
-import { config } from '../../../lib/config';
 import {
   useApprove,
   useEnrollmentDetail,
@@ -16,6 +15,10 @@ import {
   useVerifyPayment,
 } from '../api/admin-queries';
 import { ESTADO_LABELS } from './estado-labels';
+import {
+  DocumentViewer,
+  useDocumentViewer,
+} from '../../enrollment/components/document-viewer';
 
 const dinero = new Intl.NumberFormat('es-CO', {
   style: 'currency',
@@ -30,6 +33,7 @@ export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
   const reject = useReject(enrollmentId);
   const verify = useVerifyPayment(enrollmentId);
 
+  const visor = useDocumentViewer();
   const [motivo, setMotivo] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -81,14 +85,6 @@ export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
         <dd>
           {d.city ?? '—'}, {d.department ?? '—'}
         </dd>
-        <dt>Colegio</dt>
-        <dd>{d.previousSchool ?? '—'}</dd>
-        <dt>Año de graduación</dt>
-        <dd>{d.graduationYear ?? '—'}</dd>
-        <dt>Registro ICFES</dt>
-        <dd>{d.icfesRegistration ?? '—'}</dd>
-        <dt>Puntaje ICFES</dt>
-        <dd>{d.icfesScore ?? '—'}</dd>
         <dt>Jornada</dt>
         <dd>{d.shift ? SHIFT_LABELS[d.shift] : '—'}</dd>
         <dt>Modalidad</dt>
@@ -103,14 +99,9 @@ export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
               <p className="documentos__nombre">{ATTACHMENT_TYPE_LABELS[a.type]}</p>
               <p className="documentos__estado">{(a.sizeBytes / 1024).toFixed(0)} KB</p>
             </div>
-            <a
-              className="boton"
-              href={`${config.VITE_API_URL}/enrollments/${e.id}/documents/${a.type}/url`}
-              target="_blank"
-              rel="noopener"
-            >
-              Abrir
-            </a>
+            <button type="button" onClick={() => { visor.abrir(a.type); }}>
+              Ver
+            </button>
           </li>
         ))}
       </ul>
@@ -188,6 +179,14 @@ export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
             Rechazar
           </button>
         </>
+      )}
+
+      {visor.abierto && (
+        <DocumentViewer
+          enrollmentId={e.id}
+          attachment={e.attachments.find((a) => a.type === visor.abierto)!}
+          onClose={visor.cerrar}
+        />
       )}
 
       {e.status === 'REJECTED' && e.rejectionReason && (

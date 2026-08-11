@@ -6,7 +6,6 @@ import {
   SEX_LABELS,
   SHIFTS,
   SHIFT_LABELS,
-  academicStepSchema,
   aspirationStepSchema,
   personalStepSchema,
   type AcademicProgram,
@@ -80,43 +79,6 @@ export function PersonalStep({ data, onSave, saving }: StepProps) {
       </Field>
       <Field id="department" label="Departamento" error={errors['department']}>
         <input id="department" name="department" defaultValue={data.department ?? ''} {...invalidProps('department', errors['department'])} />
-      </Field>
-
-      <button type="submit" disabled={saving}>
-        {saving ? 'Guardando…' : 'Guardar y continuar'}
-      </button>
-    </form>
-  );
-}
-
-export function AcademicStep({ data, onSave, saving }: StepProps) {
-  const [errors, setErrors] = useState<Errors>({});
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const parsed = academicStepSchema.safeParse(Object.fromEntries(form));
-    if (!parsed.success) {
-      setErrors(toErrors(parsed.error.issues));
-      return;
-    }
-    setErrors({});
-    await onSave(parsed.data);
-  }
-
-  return (
-    <form className="formulario" onSubmit={(e) => void handleSubmit(e)} noValidate>
-      <Field id="previousSchool" label="Colegio de origen" error={errors['previousSchool']}>
-        <input id="previousSchool" name="previousSchool" defaultValue={data.previousSchool ?? ''} {...invalidProps('previousSchool', errors['previousSchool'])} />
-      </Field>
-      <Field id="graduationYear" label="Año de graduación" error={errors['graduationYear']}>
-        <input id="graduationYear" name="graduationYear" inputMode="numeric" defaultValue={data.graduationYear ?? ''} {...invalidProps('graduationYear', errors['graduationYear'])} />
-      </Field>
-      <Field id="icfesRegistration" label="Número de registro ICFES" error={errors['icfesRegistration']} help="Aparece en tu certificado de resultados, empieza por AC.">
-        <input id="icfesRegistration" name="icfesRegistration" defaultValue={data.icfesRegistration ?? ''} {...invalidProps('icfesRegistration', errors['icfesRegistration'])} />
-      </Field>
-      <Field id="icfesScore" label="Puntaje global ICFES" error={errors['icfesScore']} help="De 0 a 500.">
-        <input id="icfesScore" name="icfesScore" inputMode="numeric" defaultValue={data.icfesScore ?? ''} {...invalidProps('icfesScore', errors['icfesScore'])} />
       </Field>
 
       <button type="submit" disabled={saving}>

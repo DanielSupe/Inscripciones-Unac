@@ -7,51 +7,52 @@ import {
   type AttachmentType,
 } from '@repo/contracts';
 import { useUploadDocument } from '../api/enrollment-queries';
+import { DocumentViewer, useDocumentViewer } from './document-viewer';
 
-/**
- * Paso de documentos.
- *
- * Cada archivo va del navegador al almacenamiento sin pasar por nuestro
- * servidor; lo único que viaja al API es el permiso antes y la confirmación
- * después.
- */
+/** Qué es cada documento, en palabras de quien lo tiene que buscar. */
+const AYUDA: Record<AttachmentType, string> = {
+  IDENTITY: 'Tu cédula o tarjeta de identidad, por ambas caras.',
+  ICFES: 'El certificado de resultados de tu prueba Saber 11.',
+  DIPLOMA: 'Tu diploma de bachiller o el acta de grado.',
+};
+
 export function DocumentsStep({
   enrollmentId,
   attachments,
-  onContinue,
 }: {
   enrollmentId: string;
   attachments: Attachment[];
-  onContinue: () => void;
 }) {
   const upload = useUploadDocument(enrollmentId);
+  const visor = useDocumentViewer();
   const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<AttachmentType | null>(null);
+  const [subiendo, setSubiendo] = useState<AttachmentType | null>(null);
 
-  const cargados = new Set(attachments.map((a) => a.type));
-  const faltan = ATTACHMENT_TYPES.filter((t) => !cargados.has(t));
+  const cargados = new Map(attachments.map((a) => [a.type, a]));
+  const enVisor = visor.abierto ? cargados.get(visor.abierto) : undefined;
 
   async function handleFile(type: AttachmentType, event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setError(null);
-    setUploading(type);
+    setSubiendo(type);
     try {
       await upload.mutateAsync({ type, file });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo subir el archivo.');
     } finally {
-      setUploading(null);
+      setSubiendo(null);
       // Permite volver a elegir el mismo archivo tras un fallo.
       event.target.value = '';
     }
   }
 
   return (
-    <div className="formulario">
-      <p className="formulario__intro">
-        Adjunta los dos documentos. Se admiten PDF, JPG y PNG de hasta 5 MB.
+    <div className="paso">
+      <p className="paso__ayuda">
+        Sube los tres documentos. Aceptamos PDF, JPG y PNG de hasta 5 MB. Puedes revisarlos antes
+        de enviar y reemplazar el que no se lea bien.
       </p>
 
       {error && (
@@ -60,43 +61,57 @@ export function DocumentsStep({
         </p>
       )}
 
-      <ul className="documentos">
+      <ul className="docs">
         {ATTACHMENT_TYPES.map((type) => {
-          const adjunto = attachments.find((a) => a.type === type);
-          const subiendo = uploading === type;
+          const adjunto = cargados.get(type);
+          const cargando = subiendo === type;
 
           return (
-            <li key={type} className="documentos__item">
-              <div>
-                <p className="documentos__nombre">{ATTACHMENT_TYPE_LABELS[type]}</p>
-                <p className={`documentos__estado ${adjunto ? 'documentos__estado--ok' : ''}`}>
-                  {adjunto
-                    ? `Cargado · ${(adjunto.sizeBytes / 1024).toFixed(0)} KB`
-                    : 'Pendiente'}
-                </p>
+            <li key={type} className={`docs__ficha ${adjunto ? 'docs__ficha--lista' : ''}`}>
+              <div className="docs__marca" aria-hidden="true">
+                {adjunto ? '✓' : ''}
               </div>
 
-              <label className="boton" htmlFor={`archivo-${type}`}>
-                {subiendo ? 'Subiendo…' : adjunto ? 'Reemplazar' : 'Adjuntar'}
-              </label>
-              <input
-                id={`archivo-${type}`}
-                className="visualmente-oculto"
-                type="file"
-                accept={ALLOWED_ATTACHMENT_MIME_TYPES.join(',')}
-                disabled={subiendo}
-                onChange={(e) => void handleFile(type, e)}
-              />
+              <div className="docs__cuerpo">
+                <p className="docs__nombre">{ATTACHMENT_TYPE_LABELS[type]}</p>
+                <p className="docs__ayuda">{AYUDA[type]}</p>
+                {adjunto && (
+                  <p className="docs__estado">
+                    Cargado · {(adjunto.sizeBytes / 1024).toFixed(0)} KB
+                  </p>
+                )}
+              </div>
+
+              <div className="docs__acciones">
+                {adjunto && (
+                  <button type="button" onClick={() => { visor.abrir(type); }}>
+                    Ver
+                  </button>
+                )}
+                <label className="boton" htmlFor={`archivo-${type}`}>
+                  {cargando ? 'Subiendo…' : adjunto ? 'Reemplazar' : 'Adjuntar'}
+                </label>
+                <input
+                  id={`archivo-${type}`}
+                  className="visualmente-oculto"
+                  type="file"
+                  accept={ALLOWED_ATTACHMENT_MIME_TYPES.join(',')}
+                  disabled={cargando}
+                  onChange={(e) => void handleFile(type, e)}
+                />
+              </div>
             </li>
           );
         })}
       </ul>
 
-      <button type="button" onClick={onContinue} disabled={faltan.length > 0}>
-        {faltan.length > 0
-          ? `Falta adjuntar ${String(faltan.length)} documento(s)`
-          : 'Continuar al envío'}
-      </button>
+      {enVisor && (
+        <DocumentViewer
+          enrollmentId={enrollmentId}
+          attachment={enVisor}
+          onClose={visor.cerrar}
+        />
+      )}
     </div>
   );
 }

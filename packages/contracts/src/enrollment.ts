@@ -19,8 +19,6 @@ const calendarDateSchema = z
   .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Usa el formato AAAA-MM-DD' })
   .refine((value) => !Number.isNaN(Date.parse(value)), { message: 'Esa fecha no existe' });
 
-const CURRENT_YEAR = new Date().getFullYear();
-
 // ─── Paso 1 · Datos personales ───────────────────────────────────────────────
 
 export const personalStepSchema = z.object({
@@ -43,29 +41,7 @@ export const personalStepSchema = z.object({
 });
 export type PersonalStep = z.infer<typeof personalStepSchema>;
 
-// ─── Paso 2 · Datos académicos previos ───────────────────────────────────────
-
-export const academicStepSchema = z.object({
-  previousSchool: z.string().trim().min(3, { message: 'Escribe el nombre de tu colegio' }).max(120),
-  graduationYear: z.coerce
-    .number({ message: 'Escribe el año en que te graduaste' })
-    .int({ message: 'Escribe un año válido' })
-    .min(1950, { message: 'Escribe un año válido' })
-    .max(CURRENT_YEAR, { message: 'El año de graduación no puede estar en el futuro' }),
-  icfesRegistration: z
-    .string()
-    .trim()
-    .regex(/^[A-Za-z0-9]{6,20}$/, { message: 'El registro ICFES solo lleva letras y números' }),
-  // El puntaje global de la prueba Saber 11 va de 0 a 500.
-  icfesScore: z.coerce
-    .number({ message: 'Escribe tu puntaje global' })
-    .int({ message: 'El puntaje es un número entero' })
-    .min(0, { message: 'El puntaje va de 0 a 500' })
-    .max(500, { message: 'El puntaje va de 0 a 500' }),
-});
-export type AcademicStep = z.infer<typeof academicStepSchema>;
-
-// ─── Paso 3 · Aspiración ─────────────────────────────────────────────────────
+// ─── Paso 2 · Aspiración ─────────────────────────────────────────────────────
 
 export const aspirationStepSchema = z.object({
   programId: z.string().min(1, { message: 'Elige un programa' }),
@@ -88,7 +64,6 @@ export type AspirationStep = z.infer<typeof aspirationStepSchema>;
  */
 export const enrollmentDraftSchema = personalStepSchema
   .partial()
-  .extend(academicStepSchema.partial().shape)
   .extend(aspirationStepSchema.partial().shape);
 export type EnrollmentDraft = z.infer<typeof enrollmentDraftSchema>;
 
@@ -98,21 +73,24 @@ export type EnrollmentDraft = z.infer<typeof enrollmentDraftSchema>;
  * Es el mismo conjunto sin nada opcional, así que sus errores son exactamente
  * la lista de lo que le falta al aspirante para poder enviar.
  */
-export const completeEnrollmentSchema = personalStepSchema
-  .extend(academicStepSchema.shape)
-  .extend(aspirationStepSchema.shape);
+export const completeEnrollmentSchema = personalStepSchema.extend(aspirationStepSchema.shape);
 export type CompleteEnrollment = z.infer<typeof completeEnrollmentSchema>;
 
 /** Los pasos, en orden, para que el wizard sepa a cuál llevar al retomar. */
-export const ENROLLMENT_STEPS = ['personal', 'academic', 'aspiration', 'documents'] as const;
+export const ENROLLMENT_STEPS = ['personal', 'aspiration', 'documents'] as const;
 export const enrollmentStepSchema = z.enum(ENROLLMENT_STEPS);
 export type EnrollmentStep = z.infer<typeof enrollmentStepSchema>;
 
+/**
+ * Etiquetas de los pasos, escritas desde el lado de quien se inscribe.
+ *
+ * «Tus datos» y no «Datos personales»: quien llena esto no está clasificando
+ * información, está contando quién es.
+ */
 export const ENROLLMENT_STEP_LABELS: Record<EnrollmentStep, string> = {
-  personal: 'Datos personales',
-  academic: 'Datos académicos',
-  aspiration: 'Aspiración',
-  documents: 'Documentos',
+  personal: 'Tus datos',
+  aspiration: 'Tu programa',
+  documents: 'Tus documentos',
 };
 
 // ─── Catálogo académico ──────────────────────────────────────────────────────

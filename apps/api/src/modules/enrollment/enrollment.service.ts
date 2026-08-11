@@ -91,12 +91,6 @@ export async function saveDraft(
     ...(draft.phone === undefined ? {} : { phone: draft.phone }),
     ...(draft.city === undefined ? {} : { city: draft.city }),
     ...(draft.department === undefined ? {} : { department: draft.department }),
-    ...(draft.previousSchool === undefined ? {} : { previousSchool: draft.previousSchool }),
-    ...(draft.graduationYear === undefined ? {} : { graduationYear: draft.graduationYear }),
-    ...(draft.icfesRegistration === undefined
-      ? {}
-      : { icfesRegistration: draft.icfesRegistration }),
-    ...(draft.icfesScore === undefined ? {} : { icfesScore: draft.icfesScore }),
     ...(draft.shift === undefined ? {} : { shift: draft.shift }),
     ...(draft.modality === undefined ? {} : { modality: draft.modality }),
     ...(draft.programId === undefined

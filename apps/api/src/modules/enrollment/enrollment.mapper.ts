@@ -22,10 +22,7 @@ export function toDraft(row: EnrollmentWithRelations): EnrollmentDraft {
     ...(row.phone === null ? {} : { phone: row.phone }),
     ...(row.city === null ? {} : { city: row.city }),
     ...(row.department === null ? {} : { department: row.department }),
-    ...(row.previousSchool === null ? {} : { previousSchool: row.previousSchool }),
-    ...(row.graduationYear === null ? {} : { graduationYear: row.graduationYear }),
-    ...(row.icfesRegistration === null ? {} : { icfesRegistration: row.icfesRegistration }),
-    ...(row.icfesScore === null ? {} : { icfesScore: row.icfesScore }),
+
     ...(row.programId === null ? {} : { programId: row.programId }),
     ...(row.shift === null ? {} : { shift: row.shift }),
     ...(row.modality === null ? {} : { modality: row.modality }),
@@ -48,10 +45,6 @@ export function pendingSteps(row: EnrollmentWithRelations): EnrollmentStep[] {
       const field = String(issue.path[0]);
       if (['firstName', 'lastName', 'birthDate', 'sex', 'phone', 'city', 'department'].includes(field)) {
         pending.add('personal');
-      } else if (
-        ['previousSchool', 'graduationYear', 'icfesRegistration', 'icfesScore'].includes(field)
-      ) {
-        pending.add('academic');
       } else if (['programId', 'shift', 'modality'].includes(field)) {
         pending.add('aspiration');
       }
@@ -64,7 +57,7 @@ export function pendingSteps(row: EnrollmentWithRelations): EnrollmentStep[] {
   }
 
   // Se devuelven en el orden del wizard, para poder llevar al primero pendiente.
-  return (['personal', 'academic', 'aspiration', 'documents'] as const).filter((step) =>
+  return (['personal', 'aspiration', 'documents'] as const).filter((step) =>
     pending.has(step),
   );
 }

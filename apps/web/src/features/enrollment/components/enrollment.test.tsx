@@ -42,7 +42,7 @@ function inscripcion(overrides: Partial<Enrollment> = {}): Enrollment {
     period: PERIODO,
     data: {},
     attachments: [],
-    pendingSteps: ['personal', 'academic', 'aspiration', 'documents'],
+    pendingSteps: ['personal', 'aspiration', 'documents'],
     submittedAt: null,
     rejectionReason: null,
     receipt: null,
@@ -55,6 +55,18 @@ afterEach(() => {
 });
 
 describe('EnrollmentWizard', () => {
+  it('tiene tres pasos y no pide datos que ya vienen en un documento', () => {
+    renderizar(<EnrollmentWizard enrollment={inscripcion()} />);
+
+    const pasos = screen.getAllByRole('button', { name: /Tus datos|Tu programa|Tus documentos/ });
+    expect(pasos).toHaveLength(3);
+
+    // El registro y el puntaje del ICFES los aporta el certificado adjunto.
+    expect(screen.queryByLabelText(/ICFES/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/graduación/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Colegio/)).not.toBeInTheDocument();
+  });
+
   it('abre en el primer paso pendiente, no siempre en el primero', () => {
     // Personal y académico ya están; debe abrirse en aspiración.
     renderizar(
@@ -78,18 +90,19 @@ describe('EnrollmentWizard', () => {
     expect(screen.getByLabelText('Ciudad')).toHaveValue('Medellín');
   });
 
-  it('señala el campo inválido y no llama al API', async () => {
-    renderizar(<EnrollmentWizard enrollment={inscripcion({ pendingSteps: ['academic'] })} />);
+  it('señala el campo inválido y no lo guarda', async () => {
+    renderizar(<EnrollmentWizard enrollment={inscripcion({ pendingSteps: ['personal'] })} />);
 
-    await userEvent.type(screen.getByLabelText('Colegio de origen'), 'Colegio X');
-    await userEvent.type(screen.getByLabelText('Año de graduación'), '2099');
-    await userEvent.type(screen.getByLabelText('Número de registro ICFES'), 'AC202100001');
-    await userEvent.type(screen.getByLabelText('Puntaje global ICFES'), '350');
+    await userEvent.type(screen.getByLabelText('Nombres'), 'Ana');
+    await userEvent.type(screen.getByLabelText('Apellidos'), 'Pérez');
+    await userEvent.type(screen.getByLabelText('Fecha de nacimiento'), '1800-01-01');
+    await userEvent.selectOptions(screen.getByLabelText('Sexo'), 'FEMALE');
+    await userEvent.type(screen.getByLabelText('Teléfono'), 'no-es-un-telefono');
+    await userEvent.type(screen.getByLabelText('Ciudad'), 'Medellín');
+    await userEvent.type(screen.getByLabelText('Departamento'), 'Antioquia');
     await userEvent.click(screen.getByRole('button', { name: 'Guardar y continuar' }));
 
-    expect(
-      await screen.findByText('El año de graduación no puede estar en el futuro'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Escribe un teléfono válido')).toBeInTheDocument();
 
     // El wizard sí consulta el catálogo al montarse; lo que no debe ocurrir es
     // el guardado, así que se comprueba eso y no que no hubiera red en absoluto.
@@ -103,7 +116,7 @@ describe('EnrollmentWizard', () => {
     renderizar(<EnrollmentWizard enrollment={inscripcion({ pendingSteps: ['documents'] })} />);
 
     // Estando en documentos, se puede volver a un paso ya completo.
-    await userEvent.click(screen.getByRole('button', { name: /Datos personales/ }));
+    await userEvent.click(screen.getByRole('button', { name: /Tus datos/ }));
 
     expect(screen.getByLabelText('Nombres')).toBeInTheDocument();
   });
@@ -112,7 +125,7 @@ describe('EnrollmentWizard', () => {
     renderizar(<EnrollmentWizard enrollment={inscripcion({ pendingSteps: ['documents'] })} />);
 
     expect(screen.getByRole('button', { name: 'Enviar inscripción' })).toBeDisabled();
-    expect(screen.getByText(/Para enviar te falta/)).toBeInTheDocument();
+    expect(screen.getByText(/Te falta:/)).toBeInTheDocument();
   });
 
   it('habilita el envío cuando no falta nada', () => {
@@ -123,6 +136,7 @@ describe('EnrollmentWizard', () => {
           attachments: [
             { type: 'IDENTITY', contentType: 'application/pdf', sizeBytes: 1024, uploadedAt: '' },
             { type: 'ICFES', contentType: 'application/pdf', sizeBytes: 1024, uploadedAt: '' },
+            { type: 'DIPLOMA', contentType: 'application/pdf', sizeBytes: 1024, uploadedAt: '' },
           ],
         })}
       />,

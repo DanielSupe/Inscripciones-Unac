@@ -67,16 +67,12 @@ async function inscripcionEnviada(cookie: string): Promise<string> {
     phone: '3001112233',
     city: 'Medellín',
     department: 'Antioquia',
-    previousSchool: 'Colegio de prueba',
-    graduationYear: 2021,
-    icfesRegistration: 'AC202100001',
-    icfesScore: 350,
     programId,
     shift: 'DAY',
     modality: 'ON_SITE',
   });
 
-  for (const type of ['IDENTITY', 'ICFES']) {
+  for (const type of ['IDENTITY', 'ICFES', 'DIPLOMA']) {
     await request(app)
       .post(`/enrollments/${id}/documents/confirm`)
       .set('Cookie', cookie)

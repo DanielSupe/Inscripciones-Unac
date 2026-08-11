@@ -56,17 +56,13 @@ async function inscripcionCompleta(cookie: string, omitir: 'nada' | 'documentos'
     phone: '3001112233',
     city: 'Medellín',
     department: 'Antioquia',
-    previousSchool: 'Colegio de prueba',
-    graduationYear: 2021,
-    icfesRegistration: 'AC202100001',
-    icfesScore: 350,
     programId,
     shift: 'DAY',
     modality: 'ON_SITE',
   });
 
   if (omitir !== 'documentos') {
-    for (const type of ['IDENTITY', 'ICFES']) {
+    for (const type of ['IDENTITY', 'ICFES', 'DIPLOMA']) {
       await request(app)
         .post(`/enrollments/${id}/documents/confirm`)
         .set('Cookie', cookie)
@@ -139,12 +135,7 @@ describe('inscripción', () => {
 
     expect(response.status).toBe(201);
     expect(response.body.status).toBe('DRAFT');
-    expect(response.body.pendingSteps).toEqual([
-      'personal',
-      'academic',
-      'aspiration',
-      'documents',
-    ]);
+    expect(response.body.pendingSteps).toEqual(['personal', 'aspiration', 'documents']);
   });
 
   it('devuelve la que ya existe en vez de crear una segunda para el mismo periodo', async () => {
@@ -178,15 +169,33 @@ describe('inscripción', () => {
     const response = await request(app)
       .patch(`/enrollments/${creada.body.id as string}`)
       .set('Cookie', cookie)
-      .send({ graduationYear: 2099 });
+      .send({ phone: 'no-es-un-telefono' });
 
     expect(response.status).toBe(400);
-    expect(response.body.error.details).toHaveProperty('graduationYear');
+    expect(response.body.error.details).toHaveProperty('phone');
   });
 
   it('no deja enviar si faltan documentos, y dice cuáles', async () => {
     const cookie = await nuevoAspirante();
     const id = await inscripcionCompleta(cookie, 'documentos');
+
+    const response = await request(app).post(`/enrollments/${id}/submit`).set('Cookie', cookie);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.details.pasosPendientes).toContain('documents');
+  });
+
+  it('no deja enviar si falta el diploma de bachiller', async () => {
+    const cookie = await nuevoAspirante();
+    const id = await inscripcionCompleta(cookie, 'documentos');
+
+    // Se adjuntan solo dos de los tres.
+    for (const type of ['IDENTITY', 'ICFES']) {
+      await request(app)
+        .post(`/enrollments/${id}/documents/confirm`)
+        .set('Cookie', cookie)
+        .send({ type, contentType: 'application/pdf', sizeBytes: 1024 });
+    }
 
     const response = await request(app).post(`/enrollments/${id}/submit`).set('Cookie', cookie);
 

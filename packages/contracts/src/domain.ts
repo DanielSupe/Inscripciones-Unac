@@ -76,13 +76,14 @@ export const MODALITY_LABELS: Record<Modality, string> = {
 };
 
 /** Documentos que el aspirante debe adjuntar para poder enviar su inscripción. */
-export const ATTACHMENT_TYPES = ['IDENTITY', 'ICFES'] as const;
+export const ATTACHMENT_TYPES = ['IDENTITY', 'ICFES', 'DIPLOMA'] as const;
 export const attachmentTypeSchema = z.enum(ATTACHMENT_TYPES);
 export type AttachmentType = z.infer<typeof attachmentTypeSchema>;
 
 export const ATTACHMENT_TYPE_LABELS: Record<AttachmentType, string> = {
   IDENTITY: 'Documento de identidad',
   ICFES: 'Resultados ICFES (Saber 11)',
+  DIPLOMA: 'Diploma de bachiller',
 };
 
 /** Tipos de archivo admitidos al adjuntar. Se comprueban antes de firmar la subida. */

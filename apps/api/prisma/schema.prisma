@@ -59,6 +59,7 @@ enum Modality {
 enum AttachmentType {
   IDENTITY
   ICFES
+  DIPLOMA
 }
 
 /// Eje del pago, independiente del avance de la inscripción. Aprobar exige que
@@ -163,10 +164,6 @@ model Enrollment {
   city       String?
   department String?
 
-  previousSchool    String?
-  graduationYear    Int?
-  icfesRegistration String?
-  icfesScore        Int?
 
   shift    Shift?
   modality Modality?
