@@ -52,8 +52,8 @@ export function DocumentsStep({
   return (
     <div className="paso">
       <p className="paso__ayuda">
-        Sube los tres documentos. Aceptamos PDF, JPG y PNG de hasta 5 MB. Puedes revisarlos antes
-        de enviar y reemplazar el que no se lea bien.
+        Sube los {ATTACHMENT_TYPES.length} documentos. Aceptamos PDF, JPG y PNG de hasta 5 MB.
+        Puedes revisarlos antes de enviar y reemplazar el que no se lea bien.
       </p>
 
       {error && (

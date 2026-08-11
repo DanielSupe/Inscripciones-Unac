@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Enrollment } from '@repo/contracts';
+import { ATTACHMENT_TYPES, type Enrollment } from '@repo/contracts';
 import { EnrollmentWizard } from './enrollment-wizard';
 import { ProcessPanel } from './process-panel';
 import { ReceiptPanel } from './receipt-panel';
@@ -167,6 +167,22 @@ describe('ProcessPanel', () => {
 
     expect(screen.getByRole('alert')).toHaveTextContent('La foto del documento es ilegible.');
     expect(screen.getByRole('button', { name: 'Corregir y reenviar' })).toBeInTheDocument();
+  });
+
+  // El total venía escrito a mano, así que al añadir el diploma la ficha decía
+  // «3 de 2». Se cuenta contra el contrato para que no vuelva a desfasarse.
+  it('cuenta los adjuntos contra los que el contrato exige', () => {
+    const attachments = ATTACHMENT_TYPES.map((type) => ({
+      type,
+      contentType: 'application/pdf',
+      sizeBytes: 1024,
+      uploadedAt: '2026-08-10T00:00:00.000Z',
+    }));
+
+    renderizar(<ProcessPanel enrollment={inscripcion({ attachments, pendingSteps: [] })} />);
+
+    const total = ATTACHMENT_TYPES.length;
+    expect(screen.getByText(`${total} de ${total} adjuntados`)).toBeInTheDocument();
   });
 
   it('en borrador dice qué falta y ofrece continuar', () => {

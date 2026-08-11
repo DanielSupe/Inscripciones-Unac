@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import type { Enrollment, EnrollmentStatus } from '@repo/contracts';
-import { ENROLLMENT_STEP_LABELS } from '@repo/contracts';
+import { ATTACHMENT_TYPES, ENROLLMENT_STEP_LABELS } from '@repo/contracts';
 import { useReopenEnrollment } from '../api/enrollment-queries';
 
 /** Qué significa cada estado para quien lo está mirando, no para el sistema. */
@@ -78,7 +78,9 @@ export function ProcessPanel({ enrollment }: { enrollment: Enrollment }) {
         <dt>Programa</dt>
         <dd>{enrollment.program?.name ?? 'Sin elegir'}</dd>
         <dt>Documentos</dt>
-        <dd>{enrollment.attachments.length} de 2 adjuntados</dd>
+        <dd>
+          {enrollment.attachments.length} de {ATTACHMENT_TYPES.length} adjuntados
+        </dd>
         {enrollment.submittedAt && (
           <>
             <dt>Enviada el</dt>
