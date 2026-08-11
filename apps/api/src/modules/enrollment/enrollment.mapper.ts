@@ -5,7 +5,7 @@ import type {
   EnrollmentStep,
   Receipt,
 } from '@repo/contracts';
-import { ATTACHMENT_TYPES, completeEnrollmentSchema } from '@repo/contracts';
+import { ATTACHMENT_TYPES, completeEnrollmentSchema, isReceiptOverdue } from '@repo/contracts';
 import type { EnrollmentWithRelations } from './enrollment.repository';
 import type { AcademicPeriod, AcademicProgram } from '../catalog/catalog.repository';
 import { toPeriod, toProgram } from '../catalog/catalog.service';
@@ -86,6 +86,8 @@ function toReceipt(row: NonNullable<EnrollmentWithRelations['receipt']>): Receip
     issuedAt: row.issuedAt.toISOString(),
     dueAt: row.dueAt.toISOString(),
     status: row.status,
+    // Se calcula al presentarlo; no hay columna que mantener al día.
+    isOverdue: isReceiptOverdue(row.status, row.dueAt),
   };
 }
 

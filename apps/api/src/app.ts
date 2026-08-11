@@ -9,6 +9,10 @@ import { catalogRoutes } from './modules/catalog/catalog.routes';
 import { enrollmentRoutes } from './modules/enrollment/enrollment.routes';
 import { documentsRoutes } from './modules/documents/documents.routes';
 import { receiptRoutes } from './modules/receipt/receipt.routes';
+import { usersAdminRoutes } from './modules/users/users.admin.routes';
+import { enrollmentAdminRoutes } from './modules/enrollment/enrollment.admin.routes';
+import { catalogAdminRoutes } from './modules/catalog/catalog.admin.routes';
+import { receiptAdminRoutes } from './modules/receipt/receipt.admin.routes';
 
 /**
  * Construye la aplicación sin ponerla a escuchar.
@@ -37,6 +41,12 @@ export function createApp(): Express {
   app.use(enrollmentRoutes);
   app.use(documentsRoutes);
   app.use(receiptRoutes);
+
+  // Consola de administración. Cada archivo monta sus rutas ya protegidas.
+  app.use(usersAdminRoutes);
+  app.use(enrollmentAdminRoutes);
+  app.use(catalogAdminRoutes);
+  app.use(receiptAdminRoutes);
 
   // El orden importa: primero la ruta no encontrada, y el manejador de errores
   // siempre al final.

@@ -174,8 +174,26 @@ export const receiptSchema = z.object({
   issuedAt: z.string(),
   dueAt: z.string(),
   status: paymentStatusSchema,
+  /**
+   * Si venció sin pagarse.
+   *
+   * Se calcula al presentarlo, no se almacena: es una función de dos datos que
+   * ya existen. Guardarlo como estado obligaría a un proceso que lo mantuviera
+   * al día, y ese proceso es justo lo que decidimos no construir.
+   */
+  isOverdue: z.boolean(),
 });
 export type Receipt = z.infer<typeof receiptSchema>;
+
+/** Un recibo está vencido si sigue pendiente y su fecha ya pasó. */
+export function isReceiptOverdue(
+  status: 'PENDING' | 'VERIFIED',
+  dueAt: Date | string,
+  now: Date = new Date(),
+): boolean {
+  if (status === 'VERIFIED') return false;
+  return new Date(dueAt).getTime() < now.getTime();
+}
 
 // ─── La inscripción tal como la ve su dueño ──────────────────────────────────
 

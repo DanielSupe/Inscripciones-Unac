@@ -1,42 +1,42 @@
 ## 1. Contratos
 
-- [ ] 1.1 Añadir a `packages/contracts` los esquemas del listado paginado: parámetros de página, búsqueda y filtro, y la forma de la respuesta con su total
-- [ ] 1.2 Añadir los esquemas de alta, edición y restablecimiento de contraseña de una cuenta, rechazando el rol STUDENT en el propio esquema
-- [ ] 1.3 Añadir el esquema del rechazo, con el motivo obligatorio y no vacío
-- [ ] 1.4 Añadir los esquemas de alta y edición de periodo académico, con la comprobación de que el cierre es posterior a la apertura
-- [ ] 1.5 Añadir a la forma del recibo la marca de vencido, calculada y no almacenada
+- [x] 1.1 Añadir a `packages/contracts` los esquemas del listado paginado: parámetros de página, búsqueda y filtro, y la forma de la respuesta con su total
+- [x] 1.2 Añadir los esquemas de alta, edición y restablecimiento de contraseña de una cuenta, rechazando el rol STUDENT en el propio esquema
+- [x] 1.3 Añadir el esquema del rechazo, con el motivo obligatorio y no vacío
+- [x] 1.4 Añadir los esquemas de alta y edición de periodo académico, con la comprobación de que el cierre es posterior a la apertura
+- [x] 1.5 Añadir a la forma del recibo la marca de vencido, calculada y no almacenada
 
 ## 2. Módulo `users`: gestión de cuentas
 
-- [ ] 2.1 Añadir al repositorio el listado paginado con búsqueda por documento, correo y nombre, insensible a mayúsculas y por coincidencia parcial, con su total
-- [ ] 2.2 Añadir al repositorio la actualización de una cuenta y el borrado lógico
-- [ ] 2.3 Implementar en el service el alta de cuenta por parte del administrador, reutilizando las reglas de unicidad y de cifrado del registro público
-- [ ] 2.4 Implementar la edición, rechazando el rol STUDENT y respetando la unicidad de documento y correo
-- [ ] 2.5 Implementar el borrado lógico, y las tres protecciones de la cuenta de sistema: no eliminar, no cambiar de rol, sí restablecer contraseña
-- [ ] 2.6 Implementar las dos protecciones de auto-daño: nadie se elimina ni se degrada a sí mismo, comparando siempre contra el identificador de la sesión
-- [ ] 2.7 Implementar el restablecimiento de contraseña con el mismo mínimo y el mismo coste de cifrado que el registro
-- [ ] 2.8 Exponer la operación de cambio de rol para que la aprobación pueda invocarla dentro de su transacción
-- [ ] 2.9 Crear el controller y `users.admin.routes.ts`, con todas las rutas bajo `requireAuth` y `requireRole('ADMIN')`
+- [x] 2.1 Añadir al repositorio el listado paginado con búsqueda por documento, correo y nombre, insensible a mayúsculas y por coincidencia parcial, con su total
+- [x] 2.2 Añadir al repositorio la actualización de una cuenta y el borrado lógico
+- [x] 2.3 Implementar en el service el alta de cuenta por parte del administrador, reutilizando las reglas de unicidad y de cifrado del registro público
+- [x] 2.4 Implementar la edición, rechazando el rol STUDENT y respetando la unicidad de documento y correo
+- [x] 2.5 Implementar el borrado lógico, y las tres protecciones de la cuenta de sistema: no eliminar, no cambiar de rol, sí restablecer contraseña
+- [x] 2.6 Implementar las dos protecciones de auto-daño: nadie se elimina ni se degrada a sí mismo, comparando siempre contra el identificador de la sesión
+- [x] 2.7 Implementar el restablecimiento de contraseña con el mismo mínimo y el mismo coste de cifrado que el registro
+- [x] 2.8 Exponer la operación de cambio de rol para que la aprobación pueda invocarla dentro de su transacción
+- [x] 2.9 Crear el controller y `users.admin.routes.ts`, con todas las rutas bajo `requireAuth` y `requireRole('ADMIN')`
 
 ## 3. Módulo `enrollment`: revisión
 
-- [ ] 3.1 Añadir al repositorio la bandeja paginada con filtro por estado y por periodo, incluyendo el aspirante, el programa y el estado del pago
-- [ ] 3.2 Implementar en el service la consulta de la bandeja, dejando fuera por defecto las inscripciones sin enviar
-- [ ] 3.3 Implementar tomar para revisión, invocando la transición ya declarada y dejando constancia de quién la tomó y cuándo
-- [ ] 3.4 Implementar la aprobación en una transacción que cambie el estado y promueva el rol, comprobando el pago verificado **dentro** de la transacción
-- [ ] 3.5 Implementar el rechazo con motivo obligatorio, rechazando el que venga vacío o solo con espacios
-- [ ] 3.6 Comprobar que el detalle y los documentos de cualquier inscripción son alcanzables por un ADMIN a través del filtro de pertenencia que ya existe, sin añadir excepciones nuevas
-- [ ] 3.7 Crear el controller y `enrollment.admin.routes.ts`, todas bajo `requireAuth` y `requireRole('ADMIN')`
+- [x] 3.1 Añadir al repositorio la bandeja paginada con filtro por estado y por periodo, incluyendo el aspirante, el programa y el estado del pago
+- [x] 3.2 Implementar en el service la consulta de la bandeja, dejando fuera por defecto las inscripciones sin enviar
+- [x] 3.3 Implementar tomar para revisión, invocando la transición ya declarada y dejando constancia de quién la tomó y cuándo
+- [x] 3.4 Implementar la aprobación en una transacción que cambie el estado y promueva el rol, comprobando el pago verificado **dentro** de la transacción
+- [x] 3.5 Implementar el rechazo con motivo obligatorio, rechazando el que venga vacío o solo con espacios
+- [x] 3.6 Comprobar que el detalle y los documentos de cualquier inscripción son alcanzables por un ADMIN a través del filtro de pertenencia que ya existe, sin añadir excepciones nuevas
+- [x] 3.7 Crear el controller y `enrollment.admin.routes.ts`, todas bajo `requireAuth` y `requireRole('ADMIN')`
 
 ## 4. Módulos `catalog` y `receipt`
 
-- [ ] 4.1 Añadir al repositorio de catálogo el alta y la edición de periodos, y el listado de todos incluidos los inactivos
-- [ ] 4.2 Implementar en el service la validación del código único y de que el cierre sea posterior a la apertura
-- [ ] 4.3 Implementar la desactivación de un periodo, que deja de admitir inscripciones nuevas sin afectar a las existentes
-- [ ] 4.4 Implementar en `receipt` la verificación del pago, con constancia de quién y cuándo, y su reversión
-- [ ] 4.5 Hacer que verificar un pago ya verificado termine sin error y sin alterar quién lo verificó
-- [ ] 4.6 Calcular la marca de vencido al presentar el recibo, sin almacenarla
-- [ ] 4.7 Crear los controllers y las rutas de administración de ambos módulos
+- [x] 4.1 Añadir al repositorio de catálogo el alta y la edición de periodos, y el listado de todos incluidos los inactivos
+- [x] 4.2 Implementar en el service la validación del código único y de que el cierre sea posterior a la apertura
+- [x] 4.3 Implementar la desactivación de un periodo, que deja de admitir inscripciones nuevas sin afectar a las existentes
+- [x] 4.4 Implementar en `receipt` la verificación del pago, con constancia de quién y cuándo, y su reversión
+- [x] 4.5 Hacer que verificar un pago ya verificado termine sin error y sin alterar quién lo verificó
+- [x] 4.6 Calcular la marca de vencido al presentar el recibo, sin almacenarla
+- [x] 4.7 Crear los controllers y las rutas de administración de ambos módulos
 
 ## 5. Frontend: gestión de cuentas
 

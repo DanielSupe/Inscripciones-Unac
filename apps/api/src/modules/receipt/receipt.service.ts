@@ -34,3 +34,26 @@ export async function issueFor(enrollmentId: string, periodId: string): Promise<
 export async function findByEnrollmentId(enrollmentId: string): Promise<PaymentReceipt | null> {
   return receiptRepository.findByEnrollmentId(enrollmentId);
 }
+
+/**
+ * Marca el pago como verificado, o lo devuelve a pendiente.
+ *
+ * Verificar algo ya verificado termina sin error y sin alterar quién lo hizo la
+ * primera vez: repetir la acción no debería reescribir la constancia.
+ *
+ * Deshacerlo existe porque un administrador puede equivocarse, y una
+ * verificación irreversible obligaría a tocar la base de datos a mano.
+ */
+export async function setPaymentVerified(
+  enrollmentId: string,
+  verified: boolean,
+  verifierId: string,
+): Promise<PaymentReceipt> {
+  const receipt = await receiptRepository.findByEnrollmentId(enrollmentId);
+  if (!receipt) throw new NotFoundError('Esta inscripción todavía no tiene recibo.');
+
+  const yaEstaAsi = (receipt.status === 'VERIFIED') === verified;
+  if (yaEstaAsi) return receipt;
+
+  return receiptRepository.setPaymentStatus(enrollmentId, verified, verifierId);
+}

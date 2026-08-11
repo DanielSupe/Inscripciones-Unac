@@ -76,3 +76,108 @@ export async function updateStatus(
     include: withRelations,
   });
 }
+
+export type ReviewRow = Enrollment & {
+  attachments: EnrollmentAttachment[];
+  receipt: PaymentReceipt | null;
+  user: { documentType: string; documentNumber: string; email: string; deletedAt: Date | null };
+  program: { name: string } | null;
+  period: { code: string };
+};
+
+export interface ReviewListOptions {
+  page: number;
+  pageSize: number;
+  status?: EnrollmentStatus | undefined;
+  periodId?: string | undefined;
+  search?: string | undefined;
+}
+
+/**
+ * Bandeja de revisión.
+ *
+ * Deja fuera por defecto las inscripciones en borrador: todavía no se ha pedido
+ * nada sobre ellas, y llenar la bandeja de formularios a medio llenar haría
+ * inútil la bandeja.
+ */
+export async function listForReview(
+  options: ReviewListOptions,
+): Promise<{ items: ReviewRow[]; total: number }> {
+  const search = options.search?.trim();
+
+  const where: Prisma.EnrollmentWhereInput = {
+    ...(options.status ? { status: options.status } : { status: { not: 'DRAFT' } }),
+    ...(options.periodId ? { periodId: options.periodId } : {}),
+    ...(search
+      ? {
+          OR: [
+            { firstName: { contains: search, mode: 'insensitive' } },
+            { lastName: { contains: search, mode: 'insensitive' } },
+            { user: { documentNumber: { contains: search, mode: 'insensitive' } } },
+            { user: { email: { contains: search, mode: 'insensitive' } } },
+          ],
+        }
+      : {}),
+  };
+
+  const include = {
+    attachments: true,
+    receipt: true,
+    user: {
+      select: { documentType: true, documentNumber: true, email: true, deletedAt: true },
+    },
+    program: { select: { name: true } },
+    period: { select: { code: true } },
+  } as const;
+
+  const [items, total] = await Promise.all([
+    prisma.enrollment.findMany({
+      where,
+      include,
+      orderBy: { submittedAt: 'asc' },
+      skip: (options.page - 1) * options.pageSize,
+      take: options.pageSize,
+    }),
+    prisma.enrollment.count({ where }),
+  ]);
+
+  return { items: items as ReviewRow[], total };
+}
+
+/**
+ * Aprueba la inscripción y promueve a su dueño, en una sola transacción.
+ *
+ * El pago se comprueba **dentro**: hacerlo antes dejaría una ventana en la que
+ * otro administrador podría deshacer la verificación entre la comprobación y la
+ * escritura.
+ *
+ * Y las dos escrituras van juntas porque una inscripción aprobada cuyo dueño
+ * sigue siendo aspirante —o un estudiante sin inscripción aprobada— son estados
+ * que nadie podría explicar mirando la base de datos.
+ */
+export async function approveAndPromote(
+  id: string,
+  reviewerId: string,
+): Promise<{ ok: true } | { ok: false; reason: 'sin-pago-verificado' }> {
+  return prisma.$transaction(async (tx) => {
+    const receipt = await tx.paymentReceipt.findUnique({ where: { enrollmentId: id } });
+    if (!receipt || receipt.status !== 'VERIFIED') {
+      return { ok: false as const, reason: 'sin-pago-verificado' as const };
+    }
+
+    const enrollment = await tx.enrollment.update({
+      where: { id },
+      data: {
+        status: 'APPROVED',
+        reviewedAt: new Date(),
+        reviewedByUserId: reviewerId,
+        rejectionReason: null,
+      },
+      select: { userId: true },
+    });
+
+    await tx.user.update({ where: { id: enrollment.userId }, data: { role: 'STUDENT' } });
+
+    return { ok: true as const };
+  });
+}

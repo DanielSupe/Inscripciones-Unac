@@ -20,6 +20,76 @@ export async function findActiveById(id: string): Promise<User | null> {
   return prisma.user.findFirst({ where: { id, ...activo } });
 }
 
+/** Incluidas las eliminadas: la gestión necesita verlas para poder decidir. */
+export async function findById(id: string): Promise<User | null> {
+  return prisma.user.findUnique({ where: { id } });
+}
+
+export interface ListUsersOptions {
+  page: number;
+  pageSize: number;
+  search?: string | undefined;
+  role?: Role | undefined;
+  includeDeleted: boolean;
+}
+
+/**
+ * Listado paginado para la consola.
+ *
+ * La paginación va en la base de datos, no en memoria: traer todo y filtrar
+ * después funciona con ocho usuarios y deja de funcionar sin avisar.
+ *
+ * La búsqueda es parcial e insensible a mayúsculas porque quien escribe «pere»
+ * espera encontrar a Pérez.
+ */
+export async function list(
+  options: ListUsersOptions,
+): Promise<{ items: User[]; total: number }> {
+  const search = options.search?.trim();
+
+  const where: Prisma.UserWhereInput = {
+    ...(options.includeDeleted ? {} : activo),
+    ...(options.role ? { role: options.role } : {}),
+    ...(search
+      ? {
+          OR: [
+            { documentNumber: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } },
+          ],
+        }
+      : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: (options.page - 1) * options.pageSize,
+      take: options.pageSize,
+    }),
+    prisma.user.count({ where }),
+  ]);
+
+  return { items, total };
+}
+
+export async function update(id: string, data: Prisma.UserUpdateInput): Promise<User> {
+  try {
+    return await prisma.user.update({ where: { id }, data });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      const target = error.meta?.['target'];
+      throw new UniqueViolationError(Array.isArray(target) ? target.map(String) : ['desconocido']);
+    }
+    throw error;
+  }
+}
+
+/** Borrado lógico. Nunca físico: de una cuenta cuelgan inscripciones y recibos. */
+export async function softDelete(id: string): Promise<User> {
+  return prisma.user.update({ where: { id }, data: { deletedAt: new Date() } });
+}
+
 export interface CreateUserData {
   documentType: DocumentType;
   documentNumber: string;

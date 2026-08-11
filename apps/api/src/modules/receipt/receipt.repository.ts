@@ -18,3 +18,16 @@ export async function create(data: NewReceipt): Promise<PaymentReceipt> {
 export async function findByEnrollmentId(enrollmentId: string): Promise<PaymentReceipt | null> {
   return prisma.paymentReceipt.findUnique({ where: { enrollmentId } });
 }
+
+export async function setPaymentStatus(
+  enrollmentId: string,
+  verified: boolean,
+  verifierId: string,
+): Promise<PaymentReceipt> {
+  return prisma.paymentReceipt.update({
+    where: { enrollmentId },
+    data: verified
+      ? { status: 'VERIFIED', verifiedAt: new Date(), verifiedByUserId: verifierId }
+      : { status: 'PENDING', verifiedAt: null, verifiedByUserId: null },
+  });
+}
