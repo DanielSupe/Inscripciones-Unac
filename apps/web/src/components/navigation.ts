@@ -31,8 +31,8 @@ export const NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
   ],
   ADMIN: [
     { label: 'Panel', to: '/admin' },
-    { label: 'Usuarios' },
-    { label: 'Aspirantes' },
-    { label: 'Periodos académicos' },
+    { label: 'Usuarios', to: '/admin/usuarios' },
+    { label: 'Aspirantes', to: '/admin/aspirantes' },
+    { label: 'Periodos académicos', to: '/admin/periodos' },
   ],
 };

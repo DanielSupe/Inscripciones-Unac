@@ -22,16 +22,22 @@ describe('menú lateral', () => {
     expect(new Set(destinos).size).toBe(ROLES.length);
   });
 
-  it('las opciones sin destino son las que aún no existen', () => {
-    // No es un descuido: se listan a propósito, en gris, para que se vea la
-    // diferencia entre roles antes de que las secciones existan.
-    const pendientes = Object.values(NAV_BY_ROLE)
+  it('ya no queda ninguna sección pendiente', () => {
+    // Esta prueba nació afirmando lo contrario: que había opciones en gris
+    // marcadas como «pronto» mientras el producto se construía. Ahora todas
+    // tienen destino, y lo que hay que vigilar es que siga siendo así: una
+    // opción sin destino a estas alturas es un enlace roto, no una promesa.
+    const sinDestino = Object.values(NAV_BY_ROLE)
       .flat()
       .filter((item) => item.to === undefined);
 
-    expect(pendientes.length).toBeGreaterThan(0);
-    for (const item of pendientes) {
-      expect(item.label).toBeTruthy();
+    expect(sinDestino).toEqual([]);
+  });
+
+  it('ningún destino se repite dentro del mismo rol', () => {
+    for (const role of ROLES) {
+      const destinos = NAV_BY_ROLE[role].map((item) => item.to);
+      expect(new Set(destinos).size).toBe(destinos.length);
     }
   });
 });

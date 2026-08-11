@@ -2,15 +2,27 @@
 
 Plataforma de inscripción de nuevos estudiantes para la Universidad Adventista de Colombia.
 
-> **Estado actual:** un aspirante ya puede crear cuenta, entrar, diligenciar su inscripción en
-> cuatro pasos, adjuntar sus documentos y descargar el recibo de pago.
+> **Estado actual:** el ciclo está completo. Un aspirante crea cuenta, se inscribe en cuatro
+> pasos, adjunta sus documentos y obtiene su recibo; un administrador revisa, verifica el pago,
+> aprueba o rechaza con motivo, y al aprobar el aspirante pasa a estudiante.
 >
-> **Falta la consola de administración**: revisar inscripciones, verificar pagos, aprobar o
-> rechazar, y el CRUD de usuarios y periodos. Hasta que exista, nadie puede aprobar una
-> inscripción, así que el rol de estudiante no se alcanza todavía.
->
-> Tampoco hay recuperación de contraseña —no hay envío de correo en el MVP— ni límite de
-> intentos de ingreso. Ambas cosas están registradas como deuda conocida.
+> Lo que falta es **desplegarlo**. Y quedan dos carencias conocidas: no hay envío de correo, así
+> que el aspirante se entera del resultado entrando a mirar, y no hay límite de intentos de
+> ingreso.
+
+## Los tres roles
+
+| Rol | Qué puede hacer |
+|---|---|
+| **Aspirante** | Inscribirse, adjuntar documentos, consultar su proceso y su recibo |
+| **Estudiante** | Consultar en solo lectura la inscripción que le aprobaron y su recibo |
+| **Administrador** | Gestionar cuentas y periodos, revisar inscripciones, verificar pagos, aprobar y rechazar |
+
+A **estudiante** no se llega editando nada: es lo que ocurre cuando un administrador aprueba
+una inscripción, y esa promoción va en la misma transacción que el cambio de estado.
+
+**Si alguien olvida su contraseña**, un administrador se la restablece desde Usuarios y **tiene
+que comunicársela por fuera del sistema**: no hay correo que lo haga por él.
 
 ## Almacenamiento de documentos
 

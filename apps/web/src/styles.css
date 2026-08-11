@@ -486,3 +486,144 @@ a:focus-visible {
   cursor: pointer;
   white-space: nowrap;
 }
+
+/* ─── Consola de administración ────────────────────────────────────────────── */
+
+.barra-filtros {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+.barra-filtros input,
+.barra-filtros select {
+  font: inherit;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  background: #fff;
+}
+.barra-filtros input[type='search'] {
+  min-width: 15rem;
+}
+
+.tabla-envoltorio {
+  overflow-x: auto;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+  background: #fff;
+}
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.tabla th,
+.tabla td {
+  text-align: left;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--borde);
+  vertical-align: top;
+}
+.tabla th {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tenue);
+  font-weight: 500;
+  background: #fafafa;
+}
+.tabla tr:last-child td {
+  border-bottom: none;
+}
+.tabla__secundario {
+  display: block;
+  color: var(--tenue);
+  font-size: 0.8rem;
+}
+.tabla__acciones {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.tabla__acciones button {
+  margin-top: 0;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+}
+.tabla .etiqueta-rol {
+  margin-left: 0.4rem;
+}
+
+.pago {
+  font-size: 0.85rem;
+  color: var(--tenue);
+}
+.pago--ok {
+  color: var(--ok);
+  font-weight: 500;
+}
+.pago--vencido {
+  color: var(--error);
+  font-weight: 500;
+}
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--tenue);
+}
+.paginacion button {
+  margin-top: 0;
+}
+
+.panel {
+  margin-top: 1.5rem;
+  border: 1px solid #1a4fd8;
+  border-radius: 6px;
+  background: #fbfcff;
+  padding: 0.25rem;
+}
+.panel .formulario {
+  border: none;
+  background: transparent;
+}
+.panel h2 {
+  margin-top: 0;
+}
+.panel__acciones {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+}
+.panel__acciones button {
+  margin-top: 0;
+}
+
+.decision {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0 1.5rem;
+}
+.decision .boton {
+  cursor: pointer;
+}
+.decision .boton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+textarea {
+  font: inherit;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+  width: 100%;
+  max-width: 34rem;
+}

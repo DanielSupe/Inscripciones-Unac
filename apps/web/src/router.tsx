@@ -18,6 +18,10 @@ import {
   StudentHome,
   StudentReceipt,
 } from './routes/role-routes';
+import { UsersTable } from './features/admin/components/users-table';
+import { ReviewInbox } from './features/admin/components/review-inbox';
+import { ReviewDetail } from './features/admin/components/review-detail';
+import { PeriodsManager } from './features/admin/components/periods-manager';
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -138,14 +142,50 @@ const studentReceiptRoute = createRoute({
   component: StudentReceipt,
 });
 
-const adminRoute = createRoute({
+/** Zona de administración. El guard vive en la ruta padre y lo heredan todas. */
+const adminLayout = createRoute({
   getParentRoute: () => protectedLayout,
-  path: '/admin',
+  id: 'admin',
   beforeLoad: requireRole('ADMIN'),
+});
+
+const adminHomeRoute = createRoute({
+  getParentRoute: () => adminLayout,
+  path: '/admin',
   component: function AdminScreen() {
     const { session } = protectedLayout.useRouteContext();
     return <AdminHome session={session} />;
   },
+});
+
+const adminUsersRoute = createRoute({
+  getParentRoute: () => adminLayout,
+  path: '/admin/usuarios',
+  component: function AdminUsersScreen() {
+    const { session } = protectedLayout.useRouteContext();
+    return <UsersTable sessionUserId={session.id} />;
+  },
+});
+
+const adminInboxRoute = createRoute({
+  getParentRoute: () => adminLayout,
+  path: '/admin/aspirantes',
+  component: ReviewInbox,
+});
+
+const adminDetailRoute = createRoute({
+  getParentRoute: () => adminLayout,
+  path: '/admin/aspirantes/$id',
+  component: function AdminDetailScreen() {
+    const { id } = adminDetailRoute.useParams();
+    return <ReviewDetail enrollmentId={id} />;
+  },
+});
+
+const adminPeriodsRoute = createRoute({
+  getParentRoute: () => adminLayout,
+  path: '/admin/periodos',
+  component: PeriodsManager,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -160,7 +200,13 @@ const routeTree = rootRoute.addChildren([
       applicantReceiptRoute,
     ]),
     studentLayout.addChildren([studentHomeRoute, studentReceiptRoute]),
-    adminRoute,
+    adminLayout.addChildren([
+      adminHomeRoute,
+      adminUsersRoute,
+      adminInboxRoute,
+      adminDetailRoute,
+      adminPeriodsRoute,
+    ]),
   ]),
 ]);
 
