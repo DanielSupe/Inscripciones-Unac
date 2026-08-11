@@ -35,6 +35,22 @@ afterEach(() => {
 });
 
 describe('DocumentViewer', () => {
+  it('se presenta como ventana modal y bloquea el fondo', async () => {
+    fetchMock.mockResolvedValue(responde(200, { url: URL_FIRMADA }));
+
+    const { unmount } = renderizar(
+      <DocumentViewer enrollmentId="e1" attachment={adjunto()} onClose={vi.fn()} />,
+    );
+
+    const dialogo = await screen.findByRole('dialog');
+    expect(dialogo).toHaveAttribute('aria-modal', 'true');
+    // Sin esto, el fondo sigue desplazándose por debajo de la ventana.
+    expect(document.body.style.overflow).toBe('hidden');
+
+    unmount();
+    expect(document.body.style.overflow).not.toBe('hidden');
+  });
+
   it('pide la dirección firmada al abrirse, no antes', async () => {
     fetchMock.mockResolvedValue(responde(200, { url: URL_FIRMADA }));
 
@@ -52,12 +68,12 @@ describe('DocumentViewer', () => {
     // mostraba la dirección en JSON en lugar del documento.
     fetchMock.mockResolvedValue(responde(200, { url: URL_FIRMADA }));
 
-    const { container } = renderizar(
-      <DocumentViewer enrollmentId="e1" attachment={adjunto()} onClose={vi.fn()} />,
-    );
+    renderizar(<DocumentViewer enrollmentId="e1" attachment={adjunto()} onClose={vi.fn()} />);
 
     await screen.findByRole('link', { name: 'Descargar' });
-    expect(container.querySelector('iframe')).toHaveAttribute('src', URL_FIRMADA);
+    // El visor se monta en document.body a través de un portal, así que se
+    // consulta ahí y no dentro del contenedor de la prueba.
+    expect(screen.getByTitle('Documento de identidad')).toHaveAttribute('src', URL_FIRMADA);
     expect(screen.queryByText(URL_FIRMADA)).not.toBeInTheDocument();
     expect(screen.queryByText(/X-Amz-Signature/)).not.toBeInTheDocument();
   });

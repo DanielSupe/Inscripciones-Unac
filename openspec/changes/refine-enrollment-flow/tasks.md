@@ -19,6 +19,7 @@
 - [x] 3.2 Mostrar los PDF en un marco embebido y las imágenes como imagen, con descarga siempre disponible
 - [x] 3.3 Ofrecer solo la descarga cuando el tipo no se pueda representar, en lugar de un visor vacío
 - [x] 3.4 Cerrar el visor devolviendo a la pantalla anterior, sin perder lo que hubiera en curso
+- [x] 3.7 Presentar el visor como ventana modal centrada, con el foco atrapado dentro, el desplazamiento de fondo bloqueado y el foco devuelto al botón al cerrar
 - [x] 3.5 Usar el visor en el detalle de la revisión, sustituyendo el enlace que hoy muestra JSON
 - [x] 3.6 Usar el mismo visor en el paso de documentos del aspirante, para que compruebe lo que subió
 

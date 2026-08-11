@@ -15,10 +15,8 @@ import {
   useVerifyPayment,
 } from '../api/admin-queries';
 import { ESTADO_LABELS } from './estado-labels';
-import {
-  DocumentViewer,
-  useDocumentViewer,
-} from '../../enrollment/components/document-viewer';
+import { DocumentViewer } from '../../enrollment/components/document-viewer';
+import { useDocumentViewer } from '../../enrollment/components/use-document-viewer';
 
 const dinero = new Intl.NumberFormat('es-CO', {
   style: 'currency',

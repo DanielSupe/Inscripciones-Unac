@@ -7,7 +7,8 @@ import {
   type AttachmentType,
 } from '@repo/contracts';
 import { useUploadDocument } from '../api/enrollment-queries';
-import { DocumentViewer, useDocumentViewer } from './document-viewer';
+import { DocumentViewer } from './document-viewer';
+import { useDocumentViewer } from './use-document-viewer';
 
 /** Qué es cada documento, en palabras de quien lo tiene que buscar. */
 const AYUDA: Record<AttachmentType, string> = {

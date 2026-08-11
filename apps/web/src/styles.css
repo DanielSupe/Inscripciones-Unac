@@ -911,24 +911,60 @@ textarea {
   cursor: default;
 }
 
-/* ─── Visor de documentos ──────────────────────────────────────────────────── */
+/* ─── Visor de documentos, en ventana modal ────────────────────────────────
+   Al pie de la página, abrir un documento no parecía hacer nada: el contenido
+   caía fuera de la vista. Una capa por encima responde donde estaban los ojos. */
+
+.visor-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 3vw, 2.5rem);
+  background: rgb(14 16 26 / 0.55);
+  backdrop-filter: blur(2px);
+  animation: visor-entra 140ms ease-out;
+}
 
 .visor {
-  margin-top: 1.5rem;
-  border: 1px solid #1a4fd8;
-  border-radius: 10px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: min(60rem, 100%);
+  max-height: 100%;
   background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgb(14 16 26 / 0.3);
+  animation: visor-sube 160ms cubic-bezier(0.2, 0.8, 0.3, 1);
 }
+.visor:focus {
+  outline: none;
+}
+
+@keyframes visor-entra {
+  from { opacity: 0; }
+}
+@keyframes visor-sube {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .visor-fondo,
+  .visor {
+    animation: none;
+  }
+}
+
 .visor__barra {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 0.85rem 1.1rem;
+  padding: 0.9rem 1.2rem;
   background: var(--insc-soft);
   border-bottom: 1px solid var(--insc-line);
+  flex-shrink: 0;
 }
 .visor__titulo {
   margin: 0;
@@ -950,22 +986,26 @@ textarea {
   margin-top: 0;
   cursor: pointer;
 }
+
 .visor__lienzo {
-  min-height: 22rem;
+  flex: 1;
+  min-height: 0;
   display: grid;
   place-items: center;
   background: #f2f3f7;
   padding: 1rem;
+  overflow: auto;
 }
 .visor__marco {
   width: 100%;
-  height: 70vh;
+  height: 100%;
+  min-height: 60vh;
   border: none;
   background: #fff;
 }
 .visor__imagen {
   max-width: 100%;
-  max-height: 70vh;
+  max-height: 100%;
   border-radius: 4px;
 }
 .visor__cargando {
