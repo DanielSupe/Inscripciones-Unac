@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { createPeriodSchema, type ManagedPeriod } from '@repo/contracts';
+import { Modal } from '../../../components/modal';
 import { ApiRequestError } from '../../../lib/http';
 import { useCreatePeriod, usePeriods, useUpdatePeriod } from '../api/admin-queries';
 
@@ -114,9 +115,8 @@ function PeriodForm({ period, onClose }: { period?: ManagedPeriod; onClose: () =
   }
 
   return (
-    <div className="panel">
+    <Modal label={editando ? `Editar periodo ${period.code}` : 'Crear periodo'} onClose={onClose}>
       <form className="formulario" onSubmit={(e) => void handleSubmit(e)} noValidate>
-        <h2>{editando ? `Editar ${period.code}` : 'Crear periodo'}</h2>
 
         {error && (
           <p className="aviso-caja aviso-caja--error" role="alert">
@@ -169,15 +169,16 @@ function PeriodForm({ period, onClose }: { period?: ManagedPeriod; onClose: () =
           <label htmlFor="isActive">Activo</label>
         </div>
 
-        <div className="panel__acciones">
-          <button type="submit" disabled={create.isPending || update.isPending}>
+        <div className="modal__pie">
+          <button
+            type="submit"
+            className="boton boton--primario"
+            disabled={create.isPending || update.isPending}
+          >
             Guardar
-          </button>
-          <button type="button" onClick={onClose}>
-            Cancelar
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }

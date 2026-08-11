@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Enrollment, ManagedUser, Paged, ReviewItem } from '@repo/contracts';
 import { UsersTable } from './users-table';
@@ -83,6 +84,38 @@ describe('UsersTable', () => {
 
     await screen.findByText('aspirante@test.com');
     expect(screen.queryByRole('button', { name: 'Eliminar' })).not.toBeInTheDocument();
+  });
+
+  it('editar abre una ventana modal, no un panel al pie', async () => {
+    // Al pie de una tabla larga, el formulario caía fuera de la vista y pulsar
+    // «Editar» parecía no hacer nada.
+    fetchMock.mockResolvedValue(responde(pagina([cuenta()])));
+
+    renderizar(<UsersTable sessionUserId={ADMIN_ID} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Editar' }));
+
+    const dialogo = await screen.findByRole('dialog', { name: 'Editar cuenta' });
+    expect(dialogo).toHaveAttribute('aria-modal', 'true');
+    expect(document.body.style.overflow).toBe('hidden');
+  });
+
+  it('crear cuenta también abre en ventana', async () => {
+    fetchMock.mockResolvedValue(responde(pagina([cuenta()])));
+
+    renderizar(<UsersTable sessionUserId={ADMIN_ID} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Crear cuenta' })).toBeInTheDocument();
+  });
+
+  it('restablecer la contraseña abre en ventana y avisa de comunicarla', async () => {
+    fetchMock.mockResolvedValue(responde(pagina([cuenta()])));
+
+    renderizar(<UsersTable sessionUserId={ADMIN_ID} />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Contraseña' }));
+
+    const dialogo = await screen.findByRole('dialog', { name: 'Restablecer contraseña' });
+    expect(dialogo).toHaveTextContent('aspirante@test.com');
   });
 
   it('sí ofrece eliminar a los demás', async () => {

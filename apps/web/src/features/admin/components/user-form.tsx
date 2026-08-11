@@ -8,6 +8,7 @@ import {
   updateUserSchema,
   type ManagedUser,
 } from '@repo/contracts';
+import { Modal } from '../../../components/modal';
 import { ROLE_LABELS } from '../../../components/navigation';
 import { ApiRequestError } from '../../../lib/http';
 import { useCreateUser, useUpdateUser } from '../api/admin-queries';
@@ -59,10 +60,8 @@ export function UserForm({ user, onClose }: { user?: ManagedUser; onClose: () =>
   const guardando = create.isPending || update.isPending;
 
   return (
-    <div className="panel">
+    <Modal label={editando ? 'Editar cuenta' : 'Crear cuenta'} onClose={onClose}>
       <form className="formulario" onSubmit={(e) => void handleSubmit(e)} noValidate>
-        <h2>{editando ? 'Editar cuenta' : 'Crear cuenta'}</h2>
-
         {error && (
           <p className="aviso-caja aviso-caja--error" role="alert">
             {error}
@@ -110,15 +109,12 @@ export function UserForm({ user, onClose }: { user?: ManagedUser; onClose: () =>
           </>
         )}
 
-        <div className="panel__acciones">
-          <button type="submit" disabled={guardando}>
+        <div className="modal__pie">
+          <button type="submit" className="boton boton--primario" disabled={guardando}>
             {guardando ? 'Guardando…' : 'Guardar'}
-          </button>
-          <button type="button" onClick={onClose}>
-            Cancelar
           </button>
         </div>
       </form>
-    </div>
+    </Modal>
   );
 }

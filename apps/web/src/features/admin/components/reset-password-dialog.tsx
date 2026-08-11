@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { PASSWORD_MIN_LENGTH, resetPasswordSchema, type ManagedUser } from '@repo/contracts';
+import { Modal } from '../../../components/modal';
 import { ApiRequestError } from '../../../lib/http';
 import { useResetPassword } from '../api/admin-queries';
 
@@ -41,9 +42,8 @@ export function ResetPasswordDialog({
   }
 
   return (
-    <div className="panel">
+    <Modal label="Restablecer contraseña" onClose={onClose}>
       <form className="formulario" onSubmit={(e) => void handleSubmit(e)} noValidate>
-        <h2>Restablecer contraseña</h2>
         <p className="formulario__intro">Cuenta: {user.email}</p>
 
         {listo ? (
@@ -52,9 +52,6 @@ export function ResetPasswordDialog({
               Contraseña restablecida. <strong>Comunícasela a la persona</strong>: el sistema no
               envía correos, así que no se enterará por sí sola.
             </p>
-            <button type="button" onClick={onClose}>
-              Cerrar
-            </button>
           </>
         ) : (
           <>
@@ -68,17 +65,14 @@ export function ResetPasswordDialog({
             <input id="password" name="password" type="password" autoComplete="new-password" />
             <span className="campo__ayuda">Mínimo {PASSWORD_MIN_LENGTH} caracteres.</span>
 
-            <div className="panel__acciones">
-              <button type="submit" disabled={reset.isPending}>
+            <div className="modal__pie">
+              <button type="submit" className="boton boton--primario" disabled={reset.isPending}>
                 {reset.isPending ? 'Restableciendo…' : 'Restablecer'}
-              </button>
-              <button type="button" onClick={onClose}>
-                Cancelar
               </button>
             </div>
           </>
         )}
       </form>
-    </div>
+    </Modal>
   );
 }

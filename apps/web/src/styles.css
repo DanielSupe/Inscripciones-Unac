@@ -581,28 +581,6 @@ a:focus-visible {
   margin-top: 0;
 }
 
-.panel {
-  margin-top: 1.5rem;
-  border: 1px solid #1a4fd8;
-  border-radius: 6px;
-  background: #fbfcff;
-  padding: 0.25rem;
-}
-.panel .formulario {
-  border: none;
-  background: transparent;
-}
-.panel h2 {
-  margin-top: 0;
-}
-.panel__acciones {
-  display: flex;
-  gap: 0.6rem;
-  margin-top: 1.25rem;
-}
-.panel__acciones button {
-  margin-top: 0;
-}
 
 .decision {
   display: flex;
@@ -911,11 +889,12 @@ textarea {
   cursor: default;
 }
 
-/* ─── Visor de documentos, en ventana modal ────────────────────────────────
-   Al pie de la página, abrir un documento no parecía hacer nada: el contenido
-   caía fuera de la vista. Una capa por encima responde donde estaban los ojos. */
+/* ─── Ventana modal ─────────────────────────────────────────────────────────
+   Un formulario al pie de la página no responde al clic: el contenido queda
+   fuera de la vista y la acción se siente rota. Una capa por encima responde
+   donde estaban los ojos. Un solo componente para las cuatro pantallas. */
 
-.visor-fondo {
+.modal-fondo {
   position: fixed;
   inset: 0;
   z-index: 100;
@@ -924,38 +903,41 @@ textarea {
   padding: clamp(0.75rem, 3vw, 2.5rem);
   background: rgb(14 16 26 / 0.55);
   backdrop-filter: blur(2px);
-  animation: visor-entra 140ms ease-out;
+  animation: modal-entra 140ms ease-out;
 }
 
-.visor {
+.modal {
   display: flex;
   flex-direction: column;
-  width: min(60rem, 100%);
+  width: min(34rem, 100%);
   max-height: 100%;
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 20px 50px rgb(14 16 26 / 0.3);
-  animation: visor-sube 160ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  animation: modal-sube 160ms cubic-bezier(0.2, 0.8, 0.3, 1);
 }
-.visor:focus {
+.modal--wide {
+  width: min(60rem, 100%);
+}
+.modal:focus {
   outline: none;
 }
 
-@keyframes visor-entra {
+@keyframes modal-entra {
   from { opacity: 0; }
 }
-@keyframes visor-sube {
+@keyframes modal-sube {
   from { opacity: 0; transform: translateY(10px) scale(0.99); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .visor-fondo,
-  .visor {
+  .modal-fondo,
+  .modal {
     animation: none;
   }
 }
 
-.visor__barra {
+.modal__barra {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -966,35 +948,54 @@ textarea {
   border-bottom: 1px solid var(--insc-line);
   flex-shrink: 0;
 }
-.visor__titulo {
+.modal__titulo {
   margin: 0;
   font-weight: 600;
   color: var(--insc-ink);
 }
-.visor__meta {
-  margin: 0.1rem 0 0;
-  font-size: 0.8rem;
-  color: var(--tenue);
-}
-.visor__acciones {
+.modal__acciones {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
-.visor__acciones button,
-.visor__acciones .boton {
+.modal__acciones button,
+.modal__acciones .boton {
   margin-top: 0;
   cursor: pointer;
 }
 
-.visor__lienzo {
+.modal__cuerpo {
   flex: 1;
   min-height: 0;
+  overflow: auto;
+}
+/* Los formularios dentro de la ventana no necesitan su propio marco. */
+.modal__cuerpo .formulario {
+  border: none;
+  background: transparent;
+  padding: 1.4rem;
+}
+.modal__pie {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--insc-line);
+}
+.modal__pie button {
+  margin-top: 0;
+  cursor: pointer;
+}
+
+/* ─── Lienzo del visor de documentos ───────────────────────────────────────── */
+
+.visor__lienzo {
+  height: 100%;
+  min-height: 24rem;
   display: grid;
   place-items: center;
   background: #f2f3f7;
   padding: 1rem;
-  overflow: auto;
 }
 .visor__marco {
   width: 100%;
@@ -1005,7 +1006,7 @@ textarea {
 }
 .visor__imagen {
   max-width: 100%;
-  max-height: 100%;
+  max-height: 70vh;
   border-radius: 4px;
 }
 .visor__cargando {
