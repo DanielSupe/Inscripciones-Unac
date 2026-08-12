@@ -30,6 +30,9 @@
       valores y pie; columna derecha con logotipo, bienvenida e ingreso.
 - [x] 3.5 Estilos de la pantalla, incluido el apilado por debajo de 900 px con el ingreso
       primero, y foco visible en todos los controles.
+- [x] 3.6 **Añadido tras revisar.** En pantalla estrecha queda solo el ingreso: el carrusel y
+      los valores son material de escritorio. Se conserva la franja del pie, reducida, porque
+      lleva el estado del sistema, que en el móvil es donde más falta hace.
 
 ## 4. Rutas
 

@@ -1338,11 +1338,28 @@ textarea {
   color: var(--sion-azul);
 }
 
+/* En pantalla estrecha queda solo el ingreso.
+   El carrusel y los valores son material de escritorio: en un móvil se
+   interponen entre quien llega y lo único que viene a hacer. Se conserva la
+   franja del pie, reducida, porque ahí vive el estado del sistema — y es
+   precisamente en el móvil donde más importa saber si el fallo es tuyo. */
 @media (max-width: 899px) {
+  .entrada {
+    grid-template-rows: 1fr auto;
+  }
   .entrada__acceso {
     padding: 2.5rem 1.25rem;
   }
-  .carrusel {
-    aspect-ratio: 2 / 1;
+  .carrusel,
+  .valores {
+    display: none;
+  }
+  .entrada__banda {
+    flex: 0 0 auto;
+    padding: 0.9rem 1.25rem;
+  }
+  .entrada__pie {
+    padding-top: 0;
+    border-top: none;
   }
 }

@@ -70,8 +70,8 @@ anunciarlos.
 
 ### Requirement: La pantalla presenta a la institución
 
-La pantalla pública inicial SHALL identificar a la plataforma por su logotipo y SHALL presentar
-los valores de la institución.
+La pantalla pública inicial SHALL identificar a la plataforma por su logotipo, en cualquier
+tamaño de pantalla, y SHALL presentar los valores de la institución **en pantalla ancha**.
 
 Los valores SHALL mostrarse como contenido, no como accesos: SHALL NOT conducir a ninguna otra
 pantalla ni comportarse como controles que puedan activarse.
@@ -86,13 +86,20 @@ ofrecer un texto alternativo para quien no puede verlo.
 
 #### Scenario: Los valores se leen, no se pulsan
 
-- **WHEN** se recorre la pantalla inicial con el teclado
+- **WHEN** se recorre la pantalla inicial con el teclado en una pantalla ancha
 - **THEN** los valores institucionales se pueden leer pero no reciben foco como si fueran
   enlaces o botones
 
+#### Scenario: En un teléfono queda solo el ingreso
+
+- **WHEN** se abre la pantalla inicial en una pantalla estrecha
+- **THEN** se ven el logotipo y el ingreso, y no se presentan los valores institucionales, que
+  se interpondrían entre quien llega y lo único que viene a hacer
+
 ### Requirement: La pantalla incluye un carrusel de piezas institucionales
 
-La pantalla pública inicial SHALL incluir un carrusel donde mostrar piezas institucionales.
+La pantalla pública inicial SHALL incluir, **en pantalla ancha**, un carrusel donde mostrar
+piezas institucionales. En pantalla estrecha SHALL NOT presentarlo.
 
 Con **dos o más piezas**, el carrusel SHALL avanzar solo cada cierto tiempo, SHALL permitir
 avanzar y retroceder, SHALL permitir saltar a una pieza concreta, y SHALL indicar cuál se está
@@ -130,6 +137,11 @@ lleven a ninguna parte, y SHALL NOT anunciar contenido inexistente.
 - **WHEN** el carrusel no tiene ninguna pieza configurada
 - **THEN** la pantalla se presenta completa y sin controles de navegación del carrusel
 
+#### Scenario: En un teléfono no hay carrusel
+
+- **WHEN** se abre la pantalla inicial en una pantalla estrecha
+- **THEN** no se presenta el carrusel ni sus controles
+
 ### Requirement: La contraseña escrita se puede comprobar
 
 El campo de contraseña de la pantalla inicial SHALL empezar oculto y SHALL ofrecer un control
@@ -158,8 +170,11 @@ restablecer.
 ### Requirement: El estado del sistema sigue consultándose desde la zona pública
 
 La pantalla pública inicial SHALL seguir mostrando si la plataforma está operativa, sin requerir
-sesión. La indicación SHALL distinguir el estado operativo del degradado, y SHALL NOT revelar
-detalles de la infraestructura.
+sesión y **en cualquier tamaño de pantalla**. La indicación SHALL distinguir el estado operativo
+del degradado, y SHALL NOT revelar detalles de la infraestructura.
+
+Se mantiene en el teléfono aunque el resto de la presentación institucional no: es ahí donde
+más falta hace saber si el fallo es del sistema o de quien intenta entrar.
 
 #### Scenario: Plataforma operativa
 
