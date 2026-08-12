@@ -116,11 +116,13 @@ context: |
       correo en el MVP, pero el modelo deja espacio para verificarlo después.
     - El registro pide tipo y número de documento, correo con confirmación,
       contraseña y aceptación de políticas. Los nombres se piden en el wizard.
-    - El formulario de inscripción es un wizard multi-paso que guarda en DRAFT en
-      cada paso, con bloques de datos personales, académicos previos y
-      aspiración. No hay bloque específico de la denominación.
-    - Los documentos que se suben son el documento de identidad y los resultados
-      ICFES. No se piden diploma ni foto.
+    - El formulario de inscripción es un wizard que guarda en DRAFT en cada
+      paso. Son tres pasos: datos personales, programa al que aspira y
+      documentos. No se piden datos académicos que ya consten en un documento
+      adjunto, ni hay bloque de denominación.
+    - Los documentos que se suben son tres: documento de identidad, resultados
+      ICFES y diploma de bachiller. No se pide foto. Se previsualizan dentro de
+      la propia aplicación, sin exponer la dirección de almacenamiento.
     - Los programas académicos y los tipos de documento se siembran por seed. Los
       periodos académicos sí los administra el ADMIN, con fechas de apertura y
       cierre y la tarifa de inscripción del semestre.

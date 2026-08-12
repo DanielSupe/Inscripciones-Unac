@@ -65,8 +65,8 @@ describe('LoginForm', () => {
     );
 
     renderizar(<LoginForm />);
-    await userEvent.type(screen.getByLabelText('Correo electrónico'), 'alguien@test.com');
-    await userEvent.type(screen.getByLabelText('Contraseña'), 'equivocada');
+    await userEvent.type(screen.getByLabelText(/Correo electrónico/), 'alguien@test.com');
+    await userEvent.type(screen.getByLabelText(/Contraseña/), 'equivocada');
     await userEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
@@ -86,8 +86,8 @@ describe('LoginForm', () => {
     );
 
     renderizar(<LoginForm />);
-    await userEvent.type(screen.getByLabelText('Correo electrónico'), 'admin@test.com');
-    await userEvent.type(screen.getByLabelText('Contraseña'), 'contrasena123');
+    await userEvent.type(screen.getByLabelText(/Correo electrónico/), 'admin@test.com');
+    await userEvent.type(screen.getByLabelText(/Contraseña/), 'contrasena123');
     await userEvent.click(screen.getByRole('button', { name: 'Ingresar' }));
 
     await waitFor(() => {
@@ -146,7 +146,7 @@ describe('RegisterForm', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }));
 
     await waitFor(() => {
-      expect(navigate).toHaveBeenCalledWith({ to: '/ingresar' });
+      expect(navigate).toHaveBeenCalledWith({ to: '/' });
     });
     expect(consumeNotice()?.message).toContain('Tu cuenta quedó creada');
   });

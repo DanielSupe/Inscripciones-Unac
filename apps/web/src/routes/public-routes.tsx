@@ -1,38 +1,55 @@
 import { Link } from '@tanstack/react-router';
-import { HealthPanel } from '../features/health/components/health-panel';
+import { Carousel, type CarouselSlide } from '../components/carousel';
+import { InstitutionalValues } from '../components/institutional-values';
+import { HealthBadge } from '../features/health/components/health-badge';
 import { LoginForm } from '../features/auth/components/login-form';
 import { RegisterForm } from '../features/auth/components/register-form';
 
-/** Portada pública. Mantiene visible el estado del sistema. */
+/**
+ * Piezas del carrusel.
+ *
+ * Vacío a propósito: el soporte está construido y espera el material de la
+ * institución. Rellenarlo con imágenes de muestra obligaría a acordarse de
+ * quitarlas, y mientras tanto la pantalla afirmaría cosas que la UNAC no dijo.
+ */
+const PIEZAS: CarouselSlide[] = [];
+
+/**
+ * Pantalla de entrada.
+ *
+ * El ingreso va **primero en el marcado** aunque en pantalla ancha se pinte a
+ * la derecha: es a lo que viene la mayoría, y en un móvil hacerle recorrer
+ * antes el carrusel y los valores sería ordenar la pantalla al revés de como se
+ * usa. La rejilla lo coloca en su columna sin alterar ese orden.
+ */
 export function PublicHome() {
   return (
-    <main className="pagina">
-      <header>
-        <h1>SION</h1>
-        <p className="subtitulo">Inscripciones · Universidad Adventista de Colombia</p>
-      </header>
-
-      <div className="acciones">
-        <Link to="/ingresar" className="boton boton--primario">
-          Ingresar
-        </Link>
-        <Link to="/registro" className="boton">
-          Crear cuenta
-        </Link>
-      </div>
-
-      <section aria-labelledby="titulo-estado">
-        <h2 id="titulo-estado">Estado del sistema</h2>
-        <HealthPanel />
+    <main className="entrada">
+      <section className="entrada__acceso">
+        <img
+          className="entrada__logo"
+          src="/sion-logo.png"
+          alt="SION"
+          width={234}
+          height={120}
+        />
+        <LoginForm />
       </section>
-    </main>
-  );
-}
 
-export function LoginPage() {
-  return (
-    <main className="pagina pagina--estrecha">
-      <LoginForm />
+      <section className="entrada__vitrina" aria-label="La Universidad Adventista de Colombia">
+        <Carousel slides={PIEZAS} label="Novedades de la universidad" />
+
+        <div className="entrada__banda">
+          <InstitutionalValues />
+
+          <footer className="entrada__pie">
+            <p className="entrada__creditos">
+              © {new Date().getFullYear()} Universidad Adventista de Colombia · SION
+            </p>
+            <HealthBadge />
+          </footer>
+        </div>
+      </section>
     </main>
   );
 }

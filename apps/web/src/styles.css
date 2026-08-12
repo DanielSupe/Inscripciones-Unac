@@ -1,4 +1,5 @@
-/* Estética deliberadamente mínima: el diseño llega en un change posterior. */
+/* Las pantallas autenticadas siguen con la estética mínima del primer change.
+   La identidad visual entra por la pantalla pública y se extiende desde ahí. */
 
 :root {
   --texto: #1a1a1a;
@@ -7,6 +8,20 @@
   --ok: #1f7a3d;
   --alerta: #a8410f;
   --error: #a11212;
+
+  /* Paleta institucional, derivada del azul del logotipo. */
+  --sion-azul: #2d5b84;
+  --sion-azul-hondo: #1c4568;
+  --sion-azul-tenue: #eef4f9;
+  --sion-tinta: #1f2733;
+  --sion-gris: #5c6773;
+  --sion-linea: #dde4ec;
+
+  /* Los tres círculos de los valores. Tintes de igual peso a propósito: son
+     tres valores de la misma jerarquía, y un semáforo insinuaría un orden. */
+  --tinte-arena: #e9dfcb;
+  --tinte-salvia: #dae5d8;
+  --tinte-cielo: #d8e5f0;
   font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   line-height: 1.5;
   color: var(--texto);
@@ -1013,4 +1028,321 @@ textarea {
   color: var(--tenue);
   text-align: center;
   max-width: 24rem;
+}
+
+/* ─── Pantalla de entrada ──────────────────────────────────────────────────── */
+
+.entrada {
+  display: grid;
+  min-height: 100vh;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'acceso'
+    'vitrina';
+}
+
+/* El acceso va primero en el marcado, así que en pantalla ancha se coloca por
+   rejilla en su columna en vez de reordenar el foco. */
+@media (min-width: 900px) {
+  .entrada {
+    grid-template-columns: 57fr 43fr;
+    grid-template-areas: 'vitrina acceso';
+  }
+}
+
+.entrada__acceso {
+  grid-area: acceso;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 3rem 1.5rem;
+  background: #fff;
+}
+
+.entrada__logo {
+  width: auto;
+  max-width: min(15rem, 70%);
+  height: auto;
+}
+
+.entrada__vitrina {
+  grid-area: vitrina;
+  display: flex;
+  flex-direction: column;
+  background: var(--sion-azul-hondo);
+}
+
+/* ─── Carrusel ─────────────────────────────────────────────────────────────── */
+
+.carrusel {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: var(--sion-azul-tenue);
+  overflow: hidden;
+}
+
+/* Sin piezas no es un fallo: se lee como sitio reservado, no como una imagen
+   que no cargó. */
+.carrusel--vacio {
+  background-color: var(--sion-azul-tenue);
+  background-image: repeating-linear-gradient(
+    135deg,
+    transparent 0 14px,
+    rgb(45 91 132 / 6%) 14px 28px
+  );
+}
+
+.carrusel__vista,
+.carrusel__pieza {
+  height: 100%;
+}
+.carrusel__pieza > * {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carrusel__controles {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.carrusel__flecha {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 85%);
+  color: var(--sion-azul-hondo);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.carrusel__flecha:hover {
+  background: #fff;
+}
+
+.carrusel__puntos {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.carrusel__punto {
+  width: 0.6rem;
+  height: 0.6rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 60%);
+}
+.carrusel__punto--activo {
+  background: var(--sion-azul);
+}
+
+/* ─── Valores institucionales ──────────────────────────────────────────────── */
+
+.entrada__banda {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2.5rem 1.75rem 1.5rem;
+}
+
+.valores__titulo {
+  margin: 0 0 1.25rem;
+  color: rgb(255 255 255 / 75%);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.valores__lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.valores__ficha {
+  padding: 1.25rem 1.1rem;
+  border-radius: 8px;
+  background: #fff;
+  text-align: center;
+}
+
+.valores__marca {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin: 0 auto 0.75rem;
+  border-radius: 50%;
+  color: var(--sion-azul-hondo);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+.valores__marca--arena {
+  background: var(--tinte-arena);
+}
+.valores__marca--salvia {
+  background: var(--tinte-salvia);
+}
+.valores__marca--cielo {
+  background: var(--tinte-cielo);
+}
+
+.valores__nombre {
+  margin: 0 0 0.3rem;
+  color: var(--sion-tinta);
+  font-size: 0.95rem;
+}
+.valores__texto {
+  margin: 0;
+  color: var(--sion-gris);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+/* ─── Pie de la vitrina ────────────────────────────────────────────────────── */
+
+.entrada__pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgb(255 255 255 / 15%);
+}
+.entrada__creditos {
+  margin: 0;
+  color: rgb(255 255 255 / 65%);
+  font-size: 0.78rem;
+}
+
+.pulso {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  color: rgb(255 255 255 / 65%);
+  font-size: 0.78rem;
+}
+.pulso__punto {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: currentcolor;
+}
+.pulso--bien .pulso__punto {
+  background: #6fd08c;
+}
+.pulso--regular .pulso__punto {
+  background: #e8b04b;
+}
+.pulso--mal .pulso__punto {
+  background: #e8776b;
+}
+
+/* ─── El formulario dentro de la pantalla de entrada ───────────────────────── */
+
+.formulario--entrada {
+  width: 100%;
+  max-width: 24rem;
+  padding: 0;
+  border: none;
+  background: none;
+}
+.formulario--entrada h1 {
+  font-size: 1.75rem;
+  color: var(--sion-tinta);
+}
+.formulario--entrada .formulario__intro {
+  margin: 0 0 0.5rem;
+  color: var(--sion-gris);
+}
+.formulario--entrada label {
+  color: var(--sion-tinta);
+}
+.formulario--entrada input {
+  padding: 0.7rem 0.75rem;
+  border-color: var(--sion-linea);
+  border-radius: 6px;
+  background: var(--sion-azul-tenue);
+}
+.formulario--entrada input:focus-visible {
+  outline-color: var(--sion-azul);
+  background: #fff;
+}
+.formulario--entrada button[type='submit'] {
+  padding: 0.75rem;
+  border-color: var(--sion-azul);
+  border-radius: 6px;
+  background: var(--sion-azul);
+}
+.formulario--entrada button[type='submit']:hover:not(:disabled) {
+  border-color: var(--sion-azul-hondo);
+  background: var(--sion-azul-hondo);
+}
+.formulario--entrada a {
+  color: var(--sion-azul);
+}
+
+.campo__obligatorio {
+  color: var(--error);
+}
+
+/* ─── Campo de contraseña con revelado ─────────────────────────────────────── */
+
+.campo-clave {
+  position: relative;
+  display: flex;
+}
+.campo-clave input {
+  flex: 1;
+  padding-right: 2.75rem;
+}
+.campo-clave__ojo {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  padding: 0;
+  border: none;
+  border-radius: 0 6px 6px 0;
+  background: none;
+  color: var(--sion-gris);
+}
+.campo-clave__ojo:hover {
+  color: var(--sion-azul);
+}
+.campo-clave__ojo[aria-pressed='true'] {
+  color: var(--sion-azul);
+}
+
+@media (max-width: 899px) {
+  .entrada__acceso {
+    padding: 2.5rem 1.25rem;
+  }
+  .carrusel {
+    aspect-ratio: 2 / 1;
+  }
 }

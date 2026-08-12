@@ -17,7 +17,7 @@ export function AppShell({ session }: { session: SessionUser }) {
 
   async function handleLogout() {
     await logout.mutateAsync();
-    await router.navigate({ to: '/ingresar' });
+    await router.navigate({ to: '/' });
   }
 
   return (

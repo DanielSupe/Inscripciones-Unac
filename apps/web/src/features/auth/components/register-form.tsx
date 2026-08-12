@@ -61,7 +61,7 @@ export function RegisterForm() {
     try {
       await register.mutateAsync(parsed.data);
       setNotice({ tone: 'exito', message: 'Tu cuenta quedó creada. Ya puedes ingresar.' });
-      await router.navigate({ to: '/ingresar' });
+      await router.navigate({ to: '/' });
     } catch (cause) {
       setError(
         cause instanceof ApiRequestError
@@ -150,7 +150,7 @@ export function RegisterForm() {
       </button>
 
       <p className="formulario__pie">
-        ¿Ya tienes cuenta? <Link to="/ingresar">Ingresa aquí</Link>
+        ¿Ya tienes cuenta? <Link to="/">Ingresa aquí</Link>
       </p>
     </form>
   );

@@ -9,7 +9,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { Role, SessionUser } from '@repo/contracts';
 import { homePathFor, sessionQueryOptions } from './features/auth/api/auth-queries';
 import { AppShell } from './components/app-shell';
-import { LoginPage, PoliciesPage, PublicHome, RegisterPage } from './routes/public-routes';
+import { PoliciesPage, PublicHome, RegisterPage } from './routes/public-routes';
 import {
   AdminHome,
   ApplicantEnrollment,
@@ -34,15 +34,33 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
 /**
  * Si ya hay sesión, el ingreso y el registro no tienen sentido: se lleva a la
  * persona a su zona en vez de ofrecerle crear otra cuenta.
+ *
+ * Si la consulta **falla** —el API no responde— se sigue adelante hasta la
+ * pantalla pública en lugar de propagar el error. Esa pantalla es justo la que
+ * sabe decir que el sistema no está disponible, y dejarla en blanco convertiría
+ * una caída del backend en una plataforma que no arranca. No se pierde ninguna
+ * garantía: la zona protegida resuelve su propia sesión, y allí un fallo sí
+ * niega el paso.
  */
-async function redirectIfAuthenticated({ context }: { context: RouterContext }): Promise<void> {
-  const session = await context.queryClient.ensureQueryData(sessionQueryOptions());
+export async function redirectIfAuthenticated({
+  context,
+}: {
+  context: RouterContext;
+}): Promise<void> {
+  // El fallo se traduce a «no se sabe de ninguna sesión». La redirección queda
+  // fuera del `catch` a propósito: se señala lanzando, y atraparla la anularía
+  // en silencio.
+  const session = await context.queryClient
+    .ensureQueryData(sessionQueryOptions())
+    .catch(() => null);
+
   if (session) throw redirect({ to: homePathFor(session.role) });
 }
 
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
+  beforeLoad: redirectIfAuthenticated,
   component: PublicHome,
 });
 
@@ -52,11 +70,17 @@ const policiesRoute = createRoute({
   component: PoliciesPage,
 });
 
+/**
+ * El ingreso vive ahora en la raíz. Esta ruta se conserva sin pantalla porque
+ * puede estar en un marcador o en un correo, y una dirección que alguien
+ * guardó no debería terminar en un 404.
+ */
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/ingresar',
-  beforeLoad: redirectIfAuthenticated,
-  component: LoginPage,
+  beforeLoad: () => {
+    throw redirect({ to: '/' });
+  },
 });
 
 const registerRoute = createRoute({
@@ -78,7 +102,7 @@ const protectedLayout = createRoute({
   id: 'protegido',
   beforeLoad: async ({ context }) => {
     const session = await context.queryClient.ensureQueryData(sessionQueryOptions());
-    if (!session) throw redirect({ to: '/ingresar' });
+    if (!session) throw redirect({ to: '/' });
     return { session };
   },
   component: function ProtectedLayout() {

@@ -22,7 +22,7 @@ const router = createAppRouter(queryClient);
 // ingreso, donde el aviso pendiente explica por qué llegó ahí.
 onSessionExpired(() => {
   queryClient.clear();
-  void router.navigate({ to: '/ingresar' });
+  void router.navigate({ to: '/' });
 });
 
 const rootElement = document.getElementById('root');

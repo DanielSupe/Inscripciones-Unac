@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useRouter } from '@tanstack/react-router';
 import { loginRequestSchema } from '@repo/contracts';
+import { PasswordField } from '../../../components/password-field';
 import { ApiRequestError } from '../../../lib/http';
 import { consumeNotice } from '../../../lib/notice';
 import { homePathFor, useLogin } from '../api/auth-queries';
@@ -43,8 +44,11 @@ export function LoginForm() {
   }
 
   return (
-    <form className="formulario" onSubmit={(e) => void handleSubmit(e)} noValidate>
-      <h1>Ingresar a SION</h1>
+    <form className="formulario formulario--entrada" onSubmit={(e) => void handleSubmit(e)} noValidate>
+      <h1>¡Hola, bienvenido!</h1>
+      <p className="formulario__intro">
+        Accede a tu cuenta con el correo y la contraseña que registraste.
+      </p>
 
       {notice && (
         <p className={`aviso-caja aviso-caja--${notice.tone}`} role="status">
@@ -58,14 +62,15 @@ export function LoginForm() {
         </p>
       )}
 
-      <label htmlFor="email">Correo electrónico</label>
+      <label htmlFor="email">
+        Correo electrónico <span className="campo__obligatorio" aria-hidden="true">*</span>
+      </label>
       <input id="email" name="email" type="email" autoComplete="email" required />
 
-      <label htmlFor="password">Contraseña</label>
-      <input
+      <PasswordField
         id="password"
         name="password"
-        type="password"
+        label="Contraseña"
         autoComplete="current-password"
         required
       />
