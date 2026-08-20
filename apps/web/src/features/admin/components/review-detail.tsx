@@ -179,8 +179,11 @@ export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
                 )}
               </div>
 
-              <label htmlFor="motivo">Motivo del rechazo</label>
+              <label className="motivo__etiqueta" htmlFor="motivo">
+                Motivo del rechazo
+              </label>
               <textarea
+                className="motivo__texto"
                 id="motivo"
                 rows={3}
                 value={motivo}

@@ -142,14 +142,16 @@ export function DeanDetail({ enrollmentId }: { enrollmentId: string }) {
           )}
         </>
       ) : (
-        !resuelta && (
+        // Solo a la espera de fecha. Con la entrevista ya realizada no hay nada
+        // que agendar, y ofrecerlo sería un botón que el servidor rechazaría.
+        e.status === 'PENDING_INTERVIEW' && (
           <p>
             <button
               type="button"
               className="boton boton--primario"
               onClick={() => { setAgendando(true); }}
             >
-              Agendar entrevista
+              {e.pastInterviews.length > 0 ? 'Citar de nuevo' : 'Agendar entrevista'}
             </button>
           </p>
         )
@@ -188,8 +190,11 @@ export function DeanDetail({ enrollmentId }: { enrollmentId: string }) {
             )}
           </div>
 
-          <label htmlFor="motivo">Motivo del rechazo</label>
+          <label className="motivo__etiqueta" htmlFor="motivo">
+            Motivo del rechazo
+          </label>
           <textarea
+            className="motivo__texto"
             id="motivo"
             rows={3}
             value={motivo}

@@ -164,6 +164,8 @@ describe('seedEnvSchema', () => {
     SEED_ADMIN_DOCUMENT_NUMBER: '1000000000',
     SEED_ADMIN_EMAIL: 'admin@unac.edu.co',
     SEED_ADMIN_PASSWORD: 'contrasena-larga',
+    SEED_DEAN_EMAIL_DOMAIN: 'unac.edu.co',
+    SEED_DEAN_PASSWORD: 'contrasena-larga',
   };
 
   it('acepta una configuración de siembra completa', () => {
@@ -176,6 +178,18 @@ describe('seedEnvSchema', () => {
       SEED_ADMIN_DOCUMENT_TYPE: 'XX',
     });
     expect(result.success).toBe(false);
+  });
+
+  it('rechaza un dominio de decanos con arroba o protocolo', () => {
+    for (const malo of ['@unac.edu.co', 'https://unac.edu.co', 'decano@unac.edu.co']) {
+      const result = seedEnvSchema.safeParse({ ...siembraValida, SEED_DEAN_EMAIL_DOMAIN: malo });
+      expect(result.success).toBe(false);
+    }
+  });
+
+  it('exige la contraseña inicial de los decanos', () => {
+    const { SEED_DEAN_PASSWORD: _fuera, ...sinClave } = siembraValida;
+    expect(seedEnvSchema.safeParse(sinClave).success).toBe(false);
   });
 
   it('rechaza una contraseña demasiado corta', () => {

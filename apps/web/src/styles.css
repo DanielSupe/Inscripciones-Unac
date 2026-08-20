@@ -1408,3 +1408,23 @@ textarea {
 .historial li + li {
   margin-top: 0.2rem;
 }
+
+/* El motivo del rechazo vive fuera de un `.formulario`, así que su etiqueta y
+   su área de texto se pintaban una al lado de la otra. Una etiqueta a la
+   izquierda de su campo se lee como una columna de tabla, no como su nombre. */
+.motivo__etiqueta {
+  display: block;
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.motivo__texto {
+  display: block;
+  width: 100%;
+  max-width: 34rem;
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  border: 1px solid var(--borde);
+  border-radius: 4px;
+}

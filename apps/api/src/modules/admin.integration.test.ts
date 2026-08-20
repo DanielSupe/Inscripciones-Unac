@@ -34,7 +34,9 @@ function sufijo(): string {
   return Math.floor(Math.random() * 900000 + 100000).toString();
 }
 
-async function crearCuenta(role: 'APPLICANT' | 'ADMIN'): Promise<{ cookie: string; id: string; email: string }> {
+async function crearCuenta(
+  role: 'APPLICANT' | 'ADMIN' | 'DEAN',
+): Promise<{ cookie: string; id: string; email: string }> {
   const s = sufijo();
   const email = `u${s}${DOMINIO}`;
   const password = 'contrasena-de-prueba';
@@ -92,6 +94,10 @@ async function limpiar(): Promise<void> {
   if (ids.length === 0) return;
 
   await prisma.enrollment.deleteMany({ where: { userId: { in: ids } } });
+  await prisma.faculty.updateMany({
+    where: { deanUserId: { in: ids } },
+    data: { deanUserId: null },
+  });
   await prisma.user.updateMany({
     where: { reviewedEnrollments: { some: {} } },
     data: {},
@@ -142,6 +148,14 @@ beforeEach(async () => {
   const admin = await crearCuenta('ADMIN');
   adminCookie = admin.cookie;
   adminId = admin.id;
+
+  // La facultad del programa de prueba necesita decano: sin él, entregar se
+  // rechaza a propósito, y varias de estas pruebas llegan hasta la entrega.
+  const decano = await crearCuenta('DEAN');
+  await prisma.faculty.update({
+    where: { code: 'FAC-ADM-PRU' },
+    data: { deanUserId: decano.id },
+  });
 });
 
 afterAll(async () => {
@@ -191,54 +205,28 @@ describe('un administrador alcanza cualquier inscripción', () => {
   });
 });
 
-describe('decisión sobre una inscripción', () => {
-  it('no aprueba sin el pago verificado, y no deja nada a medias', async () => {
+describe('trámite del administrador', () => {
+  it('rechaza por trámite con motivo, y el aspirante lo ve', async () => {
     const aspirante = await crearCuenta('APPLICANT');
     const id = await inscripcionEnviada(aspirante.cookie);
+    await request(app).post(`/admin/enrollments/${id}/take`).set('Cookie', adminCookie);
+    const motivo = 'La foto del documento de identidad es ilegible.';
 
     const response = await request(app)
-      .post(`/admin/enrollments/${id}/approve`)
-      .set('Cookie', adminCookie);
-
-    expect(response.status).toBe(409);
-
-    // Ni el estado ni el rol se movieron.
-    const enrollment = await prisma.enrollment.findUnique({ where: { id } });
-    const user = await prisma.user.findUnique({ where: { id: aspirante.id } });
-    expect(enrollment?.status).toBe('SUBMITTED');
-    expect(user?.role).toBe('APPLICANT');
-  });
-
-  it('aprueba y promueve en la misma operación', async () => {
-    const aspirante = await crearCuenta('APPLICANT');
-    const id = await inscripcionEnviada(aspirante.cookie);
-    await request(app).post(`/admin/enrollments/${id}/payment/verify`).set('Cookie', adminCookie);
-
-    const response = await request(app)
-      .post(`/admin/enrollments/${id}/approve`)
-      .set('Cookie', adminCookie);
+      .post(`/admin/enrollments/${id}/reject`)
+      .set('Cookie', adminCookie)
+      .send({ reason: motivo });
 
     expect(response.status).toBe(200);
-    expect(response.body.status).toBe('APPROVED');
-
-    const user = await prisma.user.findUnique({ where: { id: aspirante.id } });
-    expect(user?.role).toBe('STUDENT');
-  });
-
-  it('el aspirante aprobado entra como estudiante', async () => {
-    const aspirante = await crearCuenta('APPLICANT');
-    const id = await inscripcionEnviada(aspirante.cookie);
-    await request(app).post(`/admin/enrollments/${id}/payment/verify`).set('Cookie', adminCookie);
-    await request(app).post(`/admin/enrollments/${id}/approve`).set('Cookie', adminCookie);
-
-    const me = await request(app).get('/auth/me').set('Cookie', aspirante.cookie);
-
-    expect(me.body.role).toBe('STUDENT');
+    const proceso = await request(app).get('/enrollments/current').set('Cookie', aspirante.cookie);
+    expect(proceso.body.status).toBe('REJECTED');
+    expect(proceso.body.rejectionReason).toBe(motivo);
   });
 
   it('no rechaza sin motivo', async () => {
     const aspirante = await crearCuenta('APPLICANT');
     const id = await inscripcionEnviada(aspirante.cookie);
+    await request(app).post(`/admin/enrollments/${id}/take`).set('Cookie', adminCookie);
 
     const response = await request(app)
       .post(`/admin/enrollments/${id}/reject`)
@@ -247,25 +235,61 @@ describe('decisión sobre una inscripción', () => {
 
     expect(response.status).toBe(400);
     const enrollment = await prisma.enrollment.findUnique({ where: { id } });
-    expect(enrollment?.status).toBe('SUBMITTED');
+    expect(enrollment?.status).toBe('UNDER_REVIEW');
   });
 
-  it('rechaza con motivo y el aspirante lo ve', async () => {
+  // Aprobar dejó de ser suyo en el change del decano. Se vigila aquí, además de
+  // en el guardián de transiciones, porque es la mitad de aquel cambio.
+  it('ya no puede aprobar: la decisión académica es del decano', async () => {
     const aspirante = await crearCuenta('APPLICANT');
     const id = await inscripcionEnviada(aspirante.cookie);
-    const motivo = 'La foto del documento de identidad es ilegible.';
+    await request(app).post(`/admin/enrollments/${id}/take`).set('Cookie', adminCookie);
+    await request(app).post(`/admin/enrollments/${id}/payment/verify`).set('Cookie', adminCookie);
 
-    await request(app)
-      .post(`/admin/enrollments/${id}/reject`)
-      .set('Cookie', adminCookie)
-      .send({ reason: motivo });
+    const response = await request(app)
+      .post(`/admin/enrollments/${id}/approve`)
+      .set('Cookie', adminCookie);
 
-    const proceso = await request(app).get('/enrollments/current').set('Cookie', aspirante.cookie);
-    expect(proceso.body.status).toBe('REJECTED');
-    expect(proceso.body.rejectionReason).toBe(motivo);
+    expect(response.status).toBe(404);
+
+    const enrollment = await prisma.enrollment.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({ where: { id: aspirante.id } });
+    expect(enrollment?.status).toBe('UNDER_REVIEW');
+    expect(user?.role).toBe('APPLICANT');
   });
 
-  it('recorre el ciclo completo: tomar, rechazar, corregir, verificar y aprobar', async () => {
+  it('no entrega sin el pago verificado, y no deja nada a medias', async () => {
+    const aspirante = await crearCuenta('APPLICANT');
+    const id = await inscripcionEnviada(aspirante.cookie);
+    await request(app).post(`/admin/enrollments/${id}/take`).set('Cookie', adminCookie);
+
+    const response = await request(app)
+      .post(`/admin/enrollments/${id}/hand-over`)
+      .set('Cookie', adminCookie);
+
+    expect(response.status).toBe(409);
+
+    const enrollment = await prisma.enrollment.findUnique({ where: { id } });
+    const user = await prisma.user.findUnique({ where: { id: aspirante.id } });
+    expect(enrollment?.status).toBe('UNDER_REVIEW');
+    expect(user?.role).toBe('APPLICANT');
+  });
+
+  it('deshacer la verificación vuelve a impedir la entrega', async () => {
+    const aspirante = await crearCuenta('APPLICANT');
+    const id = await inscripcionEnviada(aspirante.cookie);
+    await request(app).post(`/admin/enrollments/${id}/take`).set('Cookie', adminCookie);
+    await request(app).post(`/admin/enrollments/${id}/payment/verify`).set('Cookie', adminCookie);
+    await request(app).post(`/admin/enrollments/${id}/payment/unverify`).set('Cookie', adminCookie);
+
+    const response = await request(app)
+      .post(`/admin/enrollments/${id}/hand-over`)
+      .set('Cookie', adminCookie);
+
+    expect(response.status).toBe(409);
+  });
+
+  it('recorre su tramo: tomar, rechazar, corregir, verificar y entregar', async () => {
     const aspirante = await crearCuenta('APPLICANT');
     const id = await inscripcionEnviada(aspirante.cookie);
 
@@ -287,28 +311,17 @@ describe('decisión sobre una inscripción', () => {
     // El motivo anterior deja de mostrarse como vigente.
     expect(reenviada.body.rejectionReason).toBeNull();
 
+    await request(app).post(`/admin/enrollments/${id}/take`).set('Cookie', adminCookie);
     await request(app).post(`/admin/enrollments/${id}/payment/verify`).set('Cookie', adminCookie);
-    const aprobada = await request(app)
-      .post(`/admin/enrollments/${id}/approve`)
+    const entregada = await request(app)
+      .post(`/admin/enrollments/${id}/hand-over`)
       .set('Cookie', adminCookie);
 
-    expect(aprobada.body.status).toBe('APPROVED');
+    expect([entregada.status, entregada.body.error?.message]).toEqual([200, undefined]);
+    expect(entregada.body.status).toBe('PENDING_INTERVIEW');
     // Un solo recibo en todo el ciclo, con su número original.
     const recibos = await prisma.paymentReceipt.count({ where: { enrollmentId: id } });
     expect(recibos).toBe(1);
-  });
-
-  it('deshacer la verificación vuelve a impedir la aprobación', async () => {
-    const aspirante = await crearCuenta('APPLICANT');
-    const id = await inscripcionEnviada(aspirante.cookie);
-    await request(app).post(`/admin/enrollments/${id}/payment/verify`).set('Cookie', adminCookie);
-    await request(app).post(`/admin/enrollments/${id}/payment/unverify`).set('Cookie', adminCookie);
-
-    const response = await request(app)
-      .post(`/admin/enrollments/${id}/approve`)
-      .set('Cookie', adminCookie);
-
-    expect(response.status).toBe(409);
   });
 });
 

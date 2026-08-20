@@ -85,10 +85,7 @@ async function lista(programaId: string): Promise<{ id: string; cookie: string }
 
   await request(app).post(`/enrollments/${id}/submit`).set('Cookie', aspirante.cookie);
   await request(app).post(`/admin/enrollments/${id}/take`).set('Cookie', adminCookie);
-  await request(app)
-    .post(`/admin/enrollments/${id}/receipt/verify`)
-    .set('Cookie', adminCookie)
-    .send({ verified: true });
+  await request(app).post(`/admin/enrollments/${id}/payment/verify`).set('Cookie', adminCookie);
 
   return { id, cookie: aspirante.cookie };
 }
@@ -350,7 +347,7 @@ describe('entrevista', () => {
         location: 'Oficina 201',
       });
 
-    expect(res.status).toBe(422);
+    expect(res.status).toBe(400);
   });
 
   it('no agenda antes de que el administrador entregue', async () => {
@@ -376,7 +373,7 @@ describe('entrevista', () => {
       .set('Cookie', decanoCookie)
       .send({ scheduledAt: new Date(Date.now() + 86_400_000).toISOString(), modality: 'VIRTUAL' });
 
-    expect(res.status).toBe(422);
+    expect(res.status).toBe(400);
   });
 
   it('una inasistencia devuelve a la espera y deja constancia', async () => {
@@ -513,7 +510,7 @@ describe('decisión del decano', () => {
       .set('Cookie', decanoCookie)
       .send({ reason: '   ' });
 
-    expect(res.status).toBe(422);
+    expect(res.status).toBe(400);
   });
 });
 
@@ -532,9 +529,8 @@ describe('el decano no hereda las atribuciones del administrador', () => {
     const { id } = await lista(programaPropioId);
 
     const res = await request(app)
-      .post(`/admin/enrollments/${id}/receipt/verify`)
-      .set('Cookie', decanoCookie)
-      .send({ verified: true });
+      .post(`/admin/enrollments/${id}/payment/verify`)
+      .set('Cookie', decanoCookie);
 
     expect(res.status).toBe(403);
   });
