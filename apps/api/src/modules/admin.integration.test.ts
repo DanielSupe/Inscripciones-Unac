@@ -106,10 +106,18 @@ beforeAll(async () => {
   const hasta = new Date(ahora);
   hasta.setMonth(hasta.getMonth() + 3);
 
+  // Todo programa cuelga de una facultad: es el vínculo por el que la
+  // inscripción encuentra a su decano.
+  const facultad = await prisma.faculty.upsert({
+    where: { code: 'FAC-ADM-PRU' },
+    create: { code: 'FAC-ADM-PRU', name: 'Facultad de prueba admin' },
+    update: {},
+  });
+
   programId = (
     await prisma.academicProgram.upsert({
       where: { code: 'ADM-PRU' },
-      create: { code: 'ADM-PRU', name: 'Programa de prueba admin' },
+      create: { code: 'ADM-PRU', name: 'Programa de prueba admin', facultyId: facultad.id },
       update: {},
     })
   ).id;

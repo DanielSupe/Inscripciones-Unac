@@ -7,7 +7,7 @@ import { z } from 'zod';
  * en `EnrollmentStatus`, y los dos nunca se fusionan: un usuario llega a STUDENT
  * únicamente como efecto de que su inscripción sea aprobada.
  */
-export const ROLES = ['APPLICANT', 'STUDENT', 'ADMIN'] as const;
+export const ROLES = ['APPLICANT', 'STUDENT', 'ADMIN', 'DEAN'] as const;
 export const roleSchema = z.enum(ROLES);
 export type Role = z.infer<typeof roleSchema>;
 
@@ -26,7 +26,11 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 };
 
 /**
- * Avance de la inscripción.
+ * Avance de la inscripción, en orden de recorrido.
+ *
+ * El proceso pasa por dos manos: el administrador comprueba documentos y pago y
+ * entrega, y el decano de la facultad entrevista y decide. De ahí los tres
+ * estados centrales.
  *
  * Un rechazo no es terminal: devuelve la inscripción a DRAFT para que el
  * aspirante corrija y la reenvíe.
@@ -35,11 +39,39 @@ export const ENROLLMENT_STATUSES = [
   'DRAFT',
   'SUBMITTED',
   'UNDER_REVIEW',
+  'PENDING_INTERVIEW',
+  'INTERVIEW_SCHEDULED',
+  'INTERVIEW_HELD',
   'APPROVED',
   'REJECTED',
 ] as const;
 export const enrollmentStatusSchema = z.enum(ENROLLMENT_STATUSES);
 export type EnrollmentStatus = z.infer<typeof enrollmentStatusSchema>;
+
+/** Dónde ocurre la entrevista. Cada modalidad exige su propio dato de acceso. */
+export const INTERVIEW_MODALITIES = ['ON_SITE', 'VIRTUAL'] as const;
+export const interviewModalitySchema = z.enum(INTERVIEW_MODALITIES);
+export type InterviewModality = z.infer<typeof interviewModalitySchema>;
+
+export const INTERVIEW_MODALITY_LABELS: Record<InterviewModality, string> = {
+  ON_SITE: 'Presencial',
+  VIRTUAL: 'Virtual',
+};
+
+/**
+ * Cómo terminó una entrevista.
+ *
+ * Nulo mientras la cita sigue en pie; en cuanto se declara, la entrevista queda
+ * cerrada y ya no se mueve.
+ */
+export const INTERVIEW_OUTCOMES = ['HELD', 'NO_SHOW'] as const;
+export const interviewOutcomeSchema = z.enum(INTERVIEW_OUTCOMES);
+export type InterviewOutcome = z.infer<typeof interviewOutcomeSchema>;
+
+export const INTERVIEW_OUTCOME_LABELS: Record<InterviewOutcome, string> = {
+  HELD: 'Realizada',
+  NO_SHOW: 'No asistió',
+};
 
 /** Eje de pago, independiente del avance de la inscripción. */
 export const PAYMENT_STATUSES = ['PENDING', 'VERIFIED'] as const;

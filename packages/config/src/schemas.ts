@@ -127,6 +127,17 @@ export const seedEnvSchema = z.object({
     .regex(/^[0-9A-Za-z-]+$/, { message: 'solo admite letras, números y guiones' }),
   SEED_ADMIN_EMAIL: z.email({ message: 'debe ser un correo válido' }),
   SEED_ADMIN_PASSWORD: z.string().min(8, { message: 'debe tener al menos 8 caracteres' }),
+
+  // Los decanos se siembran igual que el administrador original. Su correo se
+  // compone con el código de la facultad y este dominio, de modo que añadir una
+  // facultad no obligue a añadir dos variables más.
+  SEED_DEAN_EMAIL_DOMAIN: z
+    .string()
+    .regex(/^[a-z0-9.-]+\.[a-z]{2,}$/, { message: 'debe ser un dominio, sin arroba ni protocolo' }),
+  // Común a todos los decanos sembrados. Es una credencial compartida a
+  // conciencia: el administrador debe restablecer cada una tras el primer
+  // arranque, con la pantalla que ya existe para eso.
+  SEED_DEAN_PASSWORD: z.string().min(8, { message: 'debe tener al menos 8 caracteres' }),
 });
 export type SeedEnv = z.infer<typeof seedEnvSchema>;
 

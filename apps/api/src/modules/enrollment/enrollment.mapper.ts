@@ -3,6 +3,7 @@ import type {
   Enrollment as EnrollmentDto,
   EnrollmentDraft,
   EnrollmentStep,
+  Interview as InterviewDto,
   Receipt,
 } from '@repo/contracts';
 import { ATTACHMENT_TYPES, completeEnrollmentSchema, isReceiptOverdue } from '@repo/contracts';
@@ -84,11 +85,36 @@ function toReceipt(row: NonNullable<EnrollmentWithRelations['receipt']>): Receip
   };
 }
 
+function toInterview(row: EnrollmentWithRelations['interviews'][number]): InterviewDto {
+  return {
+    id: row.id,
+    scheduledAt: row.scheduledAt.toISOString(),
+    modality: row.modality,
+    location: row.location,
+    meetingUrl: row.meetingUrl,
+    outcome: row.outcome,
+  };
+}
+
+/**
+ * La entrevista vigente es la única sin resultado.
+ *
+ * Se distingue por eso y no por ser la más reciente: tras una inasistencia, la
+ * cerrada puede ser posterior a ninguna otra y seguiría sin haber cita en pie.
+ */
+export function currentInterview(
+  row: EnrollmentWithRelations,
+): EnrollmentWithRelations['interviews'][number] | null {
+  return row.interviews.find((i) => i.outcome === null) ?? null;
+}
+
 export function toEnrollmentDto(
   row: EnrollmentWithRelations,
   period: AcademicPeriod,
   program: AcademicProgram | null,
 ): EnrollmentDto {
+  const vigente = currentInterview(row);
+
   return {
     id: row.id,
     status: row.status,
@@ -100,5 +126,8 @@ export function toEnrollmentDto(
     submittedAt: row.submittedAt?.toISOString() ?? null,
     rejectionReason: row.rejectionReason,
     receipt: row.receipt ? toReceipt(row.receipt) : null,
+    interview: vigente ? toInterview(vigente) : null,
+    pastInterviews: row.interviews.filter((i) => i.outcome !== null).map(toInterview),
+    decidedAt: row.decidedAt?.toISOString() ?? null,
   };
 }

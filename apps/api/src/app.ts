@@ -11,6 +11,8 @@ import { documentsRoutes } from './modules/documents/documents.routes';
 import { receiptRoutes } from './modules/receipt/receipt.routes';
 import { usersAdminRoutes } from './modules/users/users.admin.routes';
 import { enrollmentAdminRoutes } from './modules/enrollment/enrollment.admin.routes';
+import { enrollmentDeanRoutes } from './modules/enrollment/enrollment.dean.routes';
+import { interviewRoutes } from './modules/interview/interview.routes';
 import { catalogAdminRoutes } from './modules/catalog/catalog.admin.routes';
 import { receiptAdminRoutes } from './modules/receipt/receipt.admin.routes';
 
@@ -45,6 +47,8 @@ export function createApp(): Express {
   // Consola de administración. Cada archivo monta sus rutas ya protegidas.
   app.use(usersAdminRoutes);
   app.use(enrollmentAdminRoutes);
+  app.use(enrollmentDeanRoutes);
+  app.use(interviewRoutes);
   app.use(catalogAdminRoutes);
   app.use(receiptAdminRoutes);
 

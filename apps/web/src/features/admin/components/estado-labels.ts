@@ -10,6 +10,9 @@ export const ESTADO_LABELS: Record<EnrollmentStatus, string> = {
   DRAFT: 'Sin terminar',
   SUBMITTED: 'Enviada',
   UNDER_REVIEW: 'En revisión',
+  PENDING_INTERVIEW: 'Espera entrevista',
+  INTERVIEW_SCHEDULED: 'Entrevista agendada',
+  INTERVIEW_HELD: 'Entrevista realizada',
   APPROVED: 'Aprobada',
   REJECTED: 'Rechazada',
 };

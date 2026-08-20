@@ -22,6 +22,8 @@ import { UsersTable } from './features/admin/components/users-table';
 import { ReviewInbox } from './features/admin/components/review-inbox';
 import { ReviewDetail } from './features/admin/components/review-detail';
 import { PeriodsManager } from './features/admin/components/periods-manager';
+import { DeanInbox } from './features/dean/components/dean-inbox';
+import { DeanDetail } from './features/dean/components/dean-detail';
 
 interface RouterContext {
   queryClient: QueryClient;
@@ -212,6 +214,28 @@ const adminPeriodsRoute = createRoute({
   component: PeriodsManager,
 });
 
+/** Zona de la facultad. Mismo patrón que la de administración: guard en el padre. */
+const deanLayout = createRoute({
+  getParentRoute: () => protectedLayout,
+  id: 'facultad',
+  beforeLoad: requireRole('DEAN'),
+});
+
+const deanInboxRoute = createRoute({
+  getParentRoute: () => deanLayout,
+  path: '/facultad',
+  component: DeanInbox,
+});
+
+const deanDetailRoute = createRoute({
+  getParentRoute: () => deanLayout,
+  path: '/facultad/$id',
+  component: function DeanDetailScreen() {
+    const { id } = deanDetailRoute.useParams();
+    return <DeanDetail enrollmentId={id} />;
+  },
+});
+
 const routeTree = rootRoute.addChildren([
   homeRoute,
   policiesRoute,
@@ -231,6 +255,7 @@ const routeTree = rootRoute.addChildren([
       adminDetailRoute,
       adminPeriodsRoute,
     ]),
+    deanLayout.addChildren([deanInboxRoute, deanDetailRoute]),
   ]),
 ]);
 

@@ -1,33 +1,61 @@
-import type { Prisma, Enrollment, EnrollmentAttachment, PaymentReceipt } from '@prisma/client';
-import type { EnrollmentStatus } from '@repo/contracts';
+import type {
+  Prisma,
+  Enrollment,
+  EnrollmentAttachment,
+  Interview,
+  PaymentReceipt,
+} from '@prisma/client';
+import type { EnrollmentStatus, Role } from '@repo/contracts';
 import { prisma } from '../../shared/database/prisma';
 
 export type EnrollmentWithRelations = Enrollment & {
   attachments: EnrollmentAttachment[];
   receipt: PaymentReceipt | null;
+  interviews: Interview[];
 };
 
-const withRelations = { attachments: true, receipt: true } as const;
+const withRelations = {
+  attachments: true,
+  receipt: true,
+  // De la más reciente a la más antigua: la vigente, si la hay, va primero.
+  interviews: { orderBy: { createdAt: 'desc' } },
+} as const;
+
+/** Quién mira. Sale siempre de la sesión del servidor. */
+export interface Viewer {
+  id: string;
+  role: Role;
+}
 
 /**
- * Filtro de pertenencia.
+ * Filtro de visibilidad.
  *
- * Un ADMIN ve cualquiera; el resto, solo lo suyo. Es el **único** sitio del
- * módulo donde se decide eso, y va dentro de la cláusula de la consulta: un
- * recurso ajeno no llega a leerse y sale como inexistente, sin depender de que
- * alguien recuerde comparar después.
+ * Un ADMIN ve cualquiera, un DEAN las de su facultad, y el resto solo lo suyo.
+ * Es el **único** sitio del módulo donde se decide eso, y va dentro de la
+ * cláusula de la consulta: un recurso ajeno no llega a leerse y sale como
+ * inexistente, sin depender de que alguien recuerde comparar después.
+ *
+ * La facultad del decano se deduce del programa elegido y no de un campo
+ * guardado en la inscripción: duplicarlo abriría la puerta a que quedaran en
+ * desacuerdo.
  */
-function ownershipWhere(ownerId: string, isAdmin: boolean): Prisma.EnrollmentWhereInput {
-  return isAdmin ? {} : { userId: ownerId };
+function visibilityWhere(viewer: Viewer): Prisma.EnrollmentWhereInput {
+  switch (viewer.role) {
+    case 'ADMIN':
+      return {};
+    case 'DEAN':
+      return { program: { faculty: { deanUserId: viewer.id } } };
+    default:
+      return { userId: viewer.id };
+  }
 }
 
 export async function findByIdOwnedBy(
   id: string,
-  ownerId: string,
-  isAdmin: boolean,
+  viewer: Viewer,
 ): Promise<EnrollmentWithRelations | null> {
   return prisma.enrollment.findFirst({
-    where: { id, ...ownershipWhere(ownerId, isAdmin) },
+    where: { id, ...visibilityWhere(viewer) },
     include: withRelations,
   });
 }
@@ -81,8 +109,9 @@ export type ReviewRow = Enrollment & {
   attachments: EnrollmentAttachment[];
   receipt: PaymentReceipt | null;
   user: { documentType: string; documentNumber: string; email: string; deletedAt: Date | null };
-  program: { name: string } | null;
+  program: { name: string; faculty: { name: string } } | null;
   period: { code: string };
+  interviews: Interview[];
 };
 
 export interface ReviewListOptions {
@@ -91,6 +120,13 @@ export interface ReviewListOptions {
   status?: EnrollmentStatus | undefined;
   periodId?: string | undefined;
   search?: string | undefined;
+  /**
+   * Restringe la bandeja a la facultad que dirige esta persona.
+   *
+   * Va aquí y no en un filtro posterior por el mismo motivo que el resto: lo
+   * que no corresponde no llega a leerse.
+   */
+  deanUserId?: string | undefined;
 }
 
 /**
@@ -108,6 +144,16 @@ export async function listForReview(
   const where: Prisma.EnrollmentWhereInput = {
     ...(options.status ? { status: options.status } : { status: { not: 'DRAFT' } }),
     ...(options.periodId ? { periodId: options.periodId } : {}),
+    ...(options.deanUserId
+      ? {
+          program: { faculty: { deanUserId: options.deanUserId } },
+          // Al decano no le llega nada antes de que el administrador se lo
+          // entregue: hasta entonces la inscripción no es asunto suyo.
+          status: options.status ?? {
+            in: ['PENDING_INTERVIEW', 'INTERVIEW_SCHEDULED', 'INTERVIEW_HELD', 'APPROVED', 'REJECTED'],
+          },
+        }
+      : {}),
     ...(search
       ? {
           OR: [
@@ -126,8 +172,9 @@ export async function listForReview(
     user: {
       select: { documentType: true, documentNumber: true, email: true, deletedAt: true },
     },
-    program: { select: { name: true } },
+    program: { select: { name: true, faculty: { select: { name: true } } } },
     period: { select: { code: true } },
+    interviews: { orderBy: { createdAt: 'desc' } },
   } as const;
 
   const [items, total] = await Promise.all([
@@ -147,9 +194,9 @@ export async function listForReview(
 /**
  * Aprueba la inscripción y promueve a su dueño, en una sola transacción.
  *
- * El pago se comprueba **dentro**: hacerlo antes dejaría una ventana en la que
- * otro administrador podría deshacer la verificación entre la comprobación y la
- * escritura.
+ * El pago y la entrevista se comprueban **dentro**: hacerlo antes dejaría una
+ * ventana en la que otra persona podría deshacer la verificación o mover la
+ * cita entre la comprobación y la escritura.
  *
  * Y las dos escrituras van juntas porque una inscripción aprobada cuyo dueño
  * sigue siendo aspirante —o un estudiante sin inscripción aprobada— son estados
@@ -157,20 +204,28 @@ export async function listForReview(
  */
 export async function approveAndPromote(
   id: string,
-  reviewerId: string,
-): Promise<{ ok: true } | { ok: false; reason: 'sin-pago-verificado' }> {
+  deciderId: string,
+): Promise<{ ok: true } | { ok: false; reason: 'sin-pago-verificado' | 'sin-entrevista' }> {
   return prisma.$transaction(async (tx) => {
     const receipt = await tx.paymentReceipt.findUnique({ where: { enrollmentId: id } });
     if (!receipt || receipt.status !== 'VERIFIED') {
       return { ok: false as const, reason: 'sin-pago-verificado' as const };
     }
 
+    const entrevista = await tx.interview.findFirst({
+      where: { enrollmentId: id, outcome: 'HELD' },
+    });
+    if (!entrevista) {
+      return { ok: false as const, reason: 'sin-entrevista' as const };
+    }
+
     const enrollment = await tx.enrollment.update({
       where: { id },
       data: {
         status: 'APPROVED',
-        reviewedAt: new Date(),
-        reviewedByUserId: reviewerId,
+        // Quién decidió, no quién revisó: son dos personas desde este change.
+        decidedAt: new Date(),
+        decidedByUserId: deciderId,
         rejectionReason: null,
       },
       select: { userId: true },
@@ -181,3 +236,4 @@ export async function approveAndPromote(
     return { ok: true as const };
   });
 }
+

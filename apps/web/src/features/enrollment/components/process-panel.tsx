@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import type { Enrollment, EnrollmentStatus } from '@repo/contracts';
 import { ATTACHMENT_TYPES, ENROLLMENT_STEP_LABELS } from '@repo/contracts';
 import { useReopenEnrollment } from '../api/enrollment-queries';
+import { InterviewCard } from './interview-card';
 
 /** Qué significa cada estado para quien lo está mirando, no para el sistema. */
 const EXPLICACION: Record<EnrollmentStatus, { titulo: string; texto: string; tono: string }> = {
@@ -18,6 +19,22 @@ const EXPLICACION: Record<EnrollmentStatus, { titulo: string; texto: string; ton
   UNDER_REVIEW: {
     titulo: 'En revisión',
     texto: 'Estamos revisando tu inscripción y tus documentos. Te avisaremos del resultado aquí mismo.',
+    tono: 'ok',
+  },
+  PENDING_INTERVIEW: {
+    titulo: 'Documentos y pago conformes',
+    texto:
+      'Tu inscripción pasó a la facultad. El decano te asignará fecha para una entrevista y la verás aquí.',
+    tono: 'ok',
+  },
+  INTERVIEW_SCHEDULED: {
+    titulo: 'Entrevista agendada',
+    texto: 'Ya tienes fecha. Abajo están el día, la hora y cómo asistir.',
+    tono: 'ok',
+  },
+  INTERVIEW_HELD: {
+    titulo: 'Entrevista realizada',
+    texto: 'Tu entrevista ya se realizó. La facultad está decidiendo y te lo diremos aquí mismo.',
     tono: 'ok',
   },
   APPROVED: {
@@ -72,6 +89,23 @@ export function ProcessPanel({ enrollment }: { enrollment: Enrollment }) {
             Continuar mi inscripción
           </Link>
         </>
+      )}
+
+      {enrollment.interview && (
+        <section aria-labelledby="titulo-entrevista">
+          <h2 id="titulo-entrevista">Tu entrevista</h2>
+          <InterviewCard interview={enrollment.interview} />
+        </section>
+      )}
+
+      {/* Sin cita en pie pero ya en la facultad: decirlo evita que el silencio
+          se lea como un trámite olvidado. */}
+      {!enrollment.interview && enrollment.status === 'PENDING_INTERVIEW' && (
+        <p className="cita__espera">
+          {enrollment.pastInterviews.length > 0
+            ? 'No se registró tu asistencia a la entrevista. La facultad te asignará una fecha nueva.'
+            : 'La facultad te asignará la fecha de tu entrevista. La verás aquí en cuanto la fijen.'}
+        </p>
       )}
 
       <dl className="ficha">

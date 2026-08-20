@@ -4,6 +4,7 @@ import { parseDatabaseUrl } from '../src/shared/database/connection';
 import bcrypt from 'bcrypt';
 import { seedEnv } from '@repo/config/seed';
 import { seedCatalog } from './seed-catalog';
+import { seedFaculties } from './seed-faculties';
 
 // El seed corre fuera de la aplicación, así que abre su propia conexión con la
 // configuración de siembra en vez de reutilizar el cliente del API.
@@ -94,6 +95,8 @@ async function seedInitialAdmin(): Promise<void> {
 
 async function main(): Promise<void> {
   await seedInitialAdmin();
+  // Las facultades van antes que el catálogo: cada programa cuelga de una.
+  await seedFaculties(prisma);
   await seedCatalog(prisma);
 }
 

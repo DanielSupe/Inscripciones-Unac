@@ -10,6 +10,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   APPLICANT: 'Aspirante',
   STUDENT: 'Estudiante',
   ADMIN: 'Administrador',
+  DEAN: 'Decano',
 };
 
 /**
@@ -35,4 +36,5 @@ export const NAV_BY_ROLE: Record<Role, readonly NavItem[]> = {
     { label: 'Aspirantes', to: '/admin/aspirantes' },
     { label: 'Periodos académicos', to: '/admin/periodos' },
   ],
+  DEAN: [{ label: 'Aspirantes de mi facultad', to: '/facultad' }],
 };

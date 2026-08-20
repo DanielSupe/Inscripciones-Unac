@@ -128,8 +128,14 @@ export function useTakeForReview(id: string) {
   return useEnrollmentAction(id, 'take');
 }
 
-export function useApprove(id: string) {
-  return useEnrollmentAction(id, 'approve');
+/**
+ * Entregar a la facultad.
+ *
+ * Sustituye a la antigua aprobación del administrador: la decisión académica es
+ * del decano, y lo que el administrador cierra es el trámite.
+ */
+export function useHandOver(id: string) {
+  return useEnrollmentAction(id, 'hand-over');
 }
 
 export function useReject(id: string) {

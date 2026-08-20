@@ -137,10 +137,12 @@ describe('ReviewInbox', () => {
       applicantEmail: 'ana@test.com',
       applicantDeleted: false,
       programName: 'Enfermería',
+      facultyName: 'Facultad de Ciencias de la Salud',
       periodCode: '2026-2',
       submittedAt: '2026-08-01T00:00:00.000Z',
       paymentStatus: 'PENDING',
       paymentOverdue: false,
+      interviewAt: null,
       ...overrides,
     };
   }
@@ -168,7 +170,12 @@ describe('ReviewDetail', () => {
     return {
       id: 'e1',
       status: 'SUBMITTED',
-      program: { id: 'p1', code: 'ENF', name: 'Enfermería' },
+      program: {
+        id: 'p1',
+        code: 'ENF',
+        name: 'Enfermería',
+        faculty: { id: 'f1', code: 'SAL', name: 'Facultad de Ciencias de la Salud' },
+      },
       period: {
         id: 'per1',
         code: '2026-2',
@@ -191,23 +198,27 @@ describe('ReviewDetail', () => {
         status: 'PENDING',
         isOverdue: false,
       },
+      interview: null,
+      pastInterviews: [],
+      decidedAt: null,
       ...overrides,
     };
   }
 
-  it('deshabilita aprobar mientras el pago siga pendiente, y lo explica', async () => {
-    fetchMock.mockResolvedValue(responde(inscripcion()));
+  it('deshabilita entregar mientras el pago siga pendiente, y lo explica', async () => {
+    fetchMock.mockResolvedValue(responde(inscripcion({ status: 'UNDER_REVIEW' })));
 
     renderizar(<ReviewDetail enrollmentId="e1" />);
 
-    expect(await screen.findByRole('button', { name: 'Aprobar' })).toBeDisabled();
-    expect(screen.getByText('No se puede aprobar hasta verificar el pago.')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Entregar a la facultad' })).toBeDisabled();
+    expect(screen.getByText('No se puede entregar hasta verificar el pago.')).toBeInTheDocument();
   });
 
-  it('habilita aprobar cuando el pago está verificado', async () => {
+  it('habilita entregar cuando el pago está verificado', async () => {
     fetchMock.mockResolvedValue(
       responde(
         inscripcion({
+          status: 'UNDER_REVIEW',
           receipt: { ...inscripcion().receipt!, status: 'VERIFIED' },
         }),
       ),
@@ -215,16 +226,42 @@ describe('ReviewDetail', () => {
 
     renderizar(<ReviewDetail enrollmentId="e1" />);
 
-    expect(await screen.findByRole('button', { name: 'Aprobar' })).toBeEnabled();
+    expect(await screen.findByRole('button', { name: 'Entregar a la facultad' })).toBeEnabled();
   });
 
-  it('no deja rechazar con un motivo demasiado corto', async () => {
-    fetchMock.mockResolvedValue(responde(inscripcion()));
+  // La decisión académica se fue al decano. Que el administrador no pueda
+  // aprobar es la mitad del change, así que se vigila desde la interfaz además
+  // de desde el guardián de transiciones.
+  it('no ofrece aprobar en ningún estado: eso es del decano', async () => {
+    for (const status of ['UNDER_REVIEW', 'PENDING_INTERVIEW', 'INTERVIEW_HELD'] as const) {
+      fetchMock.mockResolvedValue(responde(inscripcion({ status })));
+
+      const { unmount } = renderizar(<ReviewDetail enrollmentId="e1" />);
+      await screen.findByRole('heading', { level: 1 });
+
+      expect(screen.queryByRole('button', { name: 'Aprobar' })).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it('deja de ofrecer acciones en cuanto la entrega a la facultad', async () => {
+    fetchMock.mockResolvedValue(responde(inscripcion({ status: 'PENDING_INTERVIEW' })));
 
     renderizar(<ReviewDetail enrollmentId="e1" />);
 
-    // Sin escribir nada, el botón está deshabilitado.
-    expect(await screen.findByRole('button', { name: 'Rechazar' })).toBeDisabled();
+    expect(await screen.findByText(/está en manos de la facultad/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Entregar a la facultad' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Rechazar por trámite' })).not.toBeInTheDocument();
+  });
+
+  it('no deja rechazar con un motivo demasiado corto', async () => {
+    fetchMock.mockResolvedValue(responde(inscripcion({ status: 'UNDER_REVIEW' })));
+
+    renderizar(<ReviewDetail enrollmentId="e1" />);
+
+    expect(await screen.findByRole('button', { name: 'Rechazar por trámite' })).toBeDisabled();
   });
 
   it('no ofrece decidir sobre una inscripción ya resuelta', async () => {
@@ -234,6 +271,6 @@ describe('ReviewDetail', () => {
 
     await screen.findByText(/Aprobada/);
     expect(screen.queryByRole('button', { name: 'Aprobar' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Rechazar' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Rechazar por trámite' })).not.toBeInTheDocument();
   });
 });

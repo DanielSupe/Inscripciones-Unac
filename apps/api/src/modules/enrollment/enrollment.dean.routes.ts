@@ -22,7 +22,7 @@ const list: RequestHandler = async (req, res, next) => {
     const parsed = reviewQuerySchema.safeParse(req.query);
     if (!parsed.success) throw new ValidationError('Parámetros de búsqueda inválidos.');
 
-    res.status(200).json(await reviewService.listForReview(parsed.data));
+    res.status(200).json(await reviewService.listForDean(parsed.data, sessionOf(req)));
   } catch (error) {
     next(error);
   }
@@ -36,17 +36,9 @@ const getDetail: RequestHandler = async (req, res, next) => {
   }
 };
 
-const take: RequestHandler = async (req, res, next) => {
+const approve: RequestHandler = async (req, res, next) => {
   try {
-    res.status(200).json(await reviewService.takeForReview(idOf(req), sessionOf(req)));
-  } catch (error) {
-    next(error);
-  }
-};
-
-const handOver: RequestHandler = async (req, res, next) => {
-  try {
-    res.status(200).json(await reviewService.handOver(idOf(req), sessionOf(req)));
+    res.status(200).json(await reviewService.approve(idOf(req), sessionOf(req)));
   } catch (error) {
     next(error);
   }
@@ -70,13 +62,11 @@ const reject: RequestHandler = async (req, res, next) => {
   }
 };
 
-export const enrollmentAdminRoutes: Router = Router();
+export const enrollmentDeanRoutes: Router = Router();
 
-const soloAdmin = [requireAuth, requireRole('ADMIN')] as const;
+const soloDecano = [requireAuth, requireRole('DEAN')] as const;
 
-enrollmentAdminRoutes.get('/admin/enrollments', ...soloAdmin, list);
-enrollmentAdminRoutes.get('/admin/enrollments/:id', ...soloAdmin, getDetail);
-enrollmentAdminRoutes.post('/admin/enrollments/:id/take', ...soloAdmin, take);
-// Aprobar ya no está aquí: la decisión académica es del decano de la facultad.
-enrollmentAdminRoutes.post('/admin/enrollments/:id/hand-over', ...soloAdmin, handOver);
-enrollmentAdminRoutes.post('/admin/enrollments/:id/reject', ...soloAdmin, reject);
+enrollmentDeanRoutes.get('/dean/enrollments', ...soloDecano, list);
+enrollmentDeanRoutes.get('/dean/enrollments/:id', ...soloDecano, getDetail);
+enrollmentDeanRoutes.post('/dean/enrollments/:id/approve', ...soloDecano, approve);
+enrollmentDeanRoutes.post('/dean/enrollments/:id/reject', ...soloDecano, reject);

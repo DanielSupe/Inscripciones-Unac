@@ -8,12 +8,13 @@ import {
 } from '@repo/contracts';
 import { ApiRequestError } from '../../../lib/http';
 import {
-  useApprove,
   useEnrollmentDetail,
+  useHandOver,
   useReject,
   useTakeForReview,
   useVerifyPayment,
 } from '../api/admin-queries';
+import { InterviewCard } from '../../enrollment/components/interview-card';
 import { ESTADO_LABELS } from './estado-labels';
 import { DocumentViewer } from '../../enrollment/components/document-viewer';
 import { useDocumentViewer } from '../../enrollment/components/use-document-viewer';
@@ -27,7 +28,7 @@ const dinero = new Intl.NumberFormat('es-CO', {
 export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
   const detail = useEnrollmentDetail(enrollmentId);
   const take = useTakeForReview(enrollmentId);
-  const approve = useApprove(enrollmentId);
+  const handOver = useHandOver(enrollmentId);
   const reject = useReject(enrollmentId);
   const verify = useVerifyPayment(enrollmentId);
 
@@ -50,7 +51,10 @@ export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
   const e = detail.data;
   const d = e.data;
   const pagoVerificado = e.receipt?.status === 'VERIFIED';
-  const resuelta = e.status === 'APPROVED' || e.status === 'REJECTED';
+  // Lo que el administrador aún puede tocar termina al entregar: de ahí en
+  // adelante mira, pero no interviene.
+  const enSusManos = e.status === 'SUBMITTED' || e.status === 'UNDER_REVIEW';
+  const faltanDatos = e.pendingSteps.length > 0;
 
   return (
     <>
@@ -129,9 +133,16 @@ export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
         <p>Todavía no se ha emitido recibo.</p>
       )}
 
-      {!resuelta && (
+      {e.interview && (
         <>
-          <h2>Decisión</h2>
+          <h2>Entrevista</h2>
+          <InterviewCard interview={e.interview} />
+        </>
+      )}
+
+      {enSusManos && (
+        <>
+          <h2>Trámite</h2>
 
           {e.status === 'SUBMITTED' && (
             <p>
@@ -145,38 +156,54 @@ export function ReviewDetail({ enrollmentId }: { enrollmentId: string }) {
             </p>
           )}
 
-          <div className="decision">
-            <button
-              type="button"
-              className="boton boton--primario"
-              onClick={() => void ejecutar(() => approve.mutateAsync())}
-              disabled={!pagoVerificado || approve.isPending}
-            >
-              Aprobar
-            </button>
-            {!pagoVerificado && (
-              <span className="campo__ayuda">
-                No se puede aprobar hasta verificar el pago.
-              </span>
-            )}
-          </div>
+          {e.status === 'UNDER_REVIEW' && (
+            <>
+              <div className="decision">
+                <button
+                  type="button"
+                  className="boton boton--primario"
+                  onClick={() => void ejecutar(() => handOver.mutateAsync())}
+                  disabled={!pagoVerificado || faltanDatos || handOver.isPending}
+                >
+                  Entregar a la facultad
+                </button>
+                {!pagoVerificado && (
+                  <span className="campo__ayuda">
+                    No se puede entregar hasta verificar el pago.
+                  </span>
+                )}
+                {faltanDatos && (
+                  <span className="campo__ayuda">
+                    Le faltan datos o documentos a la inscripción.
+                  </span>
+                )}
+              </div>
 
-          <label htmlFor="motivo">Motivo del rechazo</label>
-          <textarea
-            id="motivo"
-            rows={3}
-            value={motivo}
-            onChange={(ev) => { setMotivo(ev.target.value); }}
-            placeholder="Explica qué debe corregir el aspirante…"
-          />
-          <button
-            type="button"
-            onClick={() => void ejecutar(() => reject.mutateAsync({ reason: motivo }))}
-            disabled={motivo.trim().length < 10 || reject.isPending}
-          >
-            Rechazar
-          </button>
+              <label htmlFor="motivo">Motivo del rechazo</label>
+              <textarea
+                id="motivo"
+                rows={3}
+                value={motivo}
+                onChange={(ev) => { setMotivo(ev.target.value); }}
+                placeholder="Explica qué debe corregir el aspirante…"
+              />
+              <button
+                type="button"
+                onClick={() => void ejecutar(() => reject.mutateAsync({ reason: motivo }))}
+                disabled={motivo.trim().length < 10 || reject.isPending}
+              >
+                Rechazar por trámite
+              </button>
+            </>
+          )}
         </>
+      )}
+
+      {!enSusManos && e.status !== 'APPROVED' && e.status !== 'REJECTED' && (
+        <p className="campo__ayuda">
+          Esta inscripción está en manos de la facultad. Puedes seguirla, pero la decisión es del
+          decano.
+        </p>
       )}
 
       {visor.abierto && (

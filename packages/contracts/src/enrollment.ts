@@ -3,6 +3,8 @@ import {
   attachmentMimeTypeSchema,
   attachmentTypeSchema,
   enrollmentStatusSchema,
+  interviewModalitySchema,
+  interviewOutcomeSchema,
   modalitySchema,
   paymentStatusSchema,
   sexSchema,
@@ -95,10 +97,24 @@ export const ENROLLMENT_STEP_LABELS: Record<EnrollmentStep, string> = {
 
 // ─── Catálogo académico ──────────────────────────────────────────────────────
 
+/**
+ * Facultad.
+ *
+ * Agrupa programas y tiene un decano. Ese vínculo es lo que decide a quién le
+ * llega cada inscripción, así que viaja con el programa a todas partes.
+ */
+export const facultySchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string(),
+});
+export type Faculty = z.infer<typeof facultySchema>;
+
 export const academicProgramSchema = z.object({
   id: z.string(),
   code: z.string(),
   name: z.string(),
+  faculty: facultySchema,
 });
 export type AcademicProgram = z.infer<typeof academicProgramSchema>;
 
@@ -173,6 +189,58 @@ export function isReceiptOverdue(
   return new Date(dueAt).getTime() < now.getTime();
 }
 
+// ─── Entrevista de admisión ──────────────────────────────────────────────────
+
+export const interviewSchema = z.object({
+  id: z.string(),
+  scheduledAt: z.string(),
+  modality: interviewModalitySchema,
+  /** Presente solo si es presencial. */
+  location: z.string().nullable(),
+  /** Presente solo si es virtual. */
+  meetingUrl: z.string().nullable(),
+  /** Nulo mientras la cita sigue en pie. Con valor, la entrevista está cerrada. */
+  outcome: interviewOutcomeSchema.nullable(),
+});
+export type Interview = z.infer<typeof interviewSchema>;
+
+/**
+ * Petición de agendar o mover una entrevista.
+ *
+ * La modalidad decide qué dato de acceso es obligatorio. Se comprueba aquí, en
+ * el esquema compartido, para que el formulario y el endpoint apliquen la misma
+ * regla sin escribirla dos veces.
+ */
+export const scheduleInterviewSchema = z
+  .object({
+    scheduledAt: z
+      .string()
+      .refine((value) => !Number.isNaN(Date.parse(value)), { message: 'Esa fecha no existe' }),
+    modality: interviewModalitySchema,
+    location: z.string().trim().max(200).optional(),
+    meetingUrl: z.string().trim().max(500).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.modality === 'ON_SITE' && !value.location) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['location'],
+        message: 'Indica dónde será la entrevista',
+      });
+    }
+    if (value.modality === 'VIRTUAL' && !value.meetingUrl) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['meetingUrl'],
+        message: 'Indica el enlace de la reunión',
+      });
+    }
+  });
+export type ScheduleInterviewRequest = z.infer<typeof scheduleInterviewSchema>;
+
+export const interviewOutcomeRequestSchema = z.object({ outcome: interviewOutcomeSchema });
+export type InterviewOutcomeRequest = z.infer<typeof interviewOutcomeRequestSchema>;
+
 // ─── La inscripción tal como la ve su dueño ──────────────────────────────────
 
 export const enrollmentSchema = z.object({
@@ -187,5 +255,10 @@ export const enrollmentSchema = z.object({
   submittedAt: z.string().nullable(),
   rejectionReason: z.string().nullable(),
   receipt: receiptSchema.nullable(),
+  /** La cita en pie, si la hay. */
+  interview: interviewSchema.nullable(),
+  /** Las cerradas, de la más reciente a la más antigua. Ahí constan las ausencias. */
+  pastInterviews: z.array(interviewSchema),
+  decidedAt: z.string().nullable(),
 });
 export type Enrollment = z.infer<typeof enrollmentSchema>;

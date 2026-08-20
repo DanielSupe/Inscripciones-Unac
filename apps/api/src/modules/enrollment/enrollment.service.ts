@@ -11,20 +11,21 @@ import { applyTransition, isEditable } from './enrollment.transitions';
 
 const NO_EXISTE = 'No encontramos esa inscripción.';
 
-/** Un ADMIN alcanza cualquier inscripción; el resto, solo la suya. */
-function isAdmin(session: SessionUser): boolean {
-  return session.role === 'ADMIN';
-}
-
 /**
  * Carga una inscripción exigiendo la sesión junto al identificador.
  *
  * La firma es deliberada: no existe forma de pedir una inscripción sin decir
  * quién la pide. Un recurso ajeno sale como inexistente, que es lo que pide la
  * spec —la respuesta no debe distinguir «no es tuya» de «no existe»—.
+ *
+ * Quién alcanza qué lo decide el repositorio dentro de la consulta, así que
+ * añadir el decano no ha requerido ninguna comprobación nueva aquí.
  */
 async function loadOwned(id: string, session: SessionUser): Promise<EnrollmentWithRelations> {
-  const found = await enrollmentRepository.findByIdOwnedBy(id, session.id, isAdmin(session));
+  const found = await enrollmentRepository.findByIdOwnedBy(id, {
+    id: session.id,
+    role: session.role,
+  });
   if (!found) throw new NotFoundError(NO_EXISTE);
   return found;
 }
@@ -110,7 +111,7 @@ export async function saveDraft(
  */
 export async function submit(id: string, session: SessionUser): Promise<EnrollmentDto> {
   const enrollment = await loadOwned(id, session);
-  const nextStatus = applyTransition(enrollment.status, 'submit');
+  const nextStatus = applyTransition(enrollment.status, 'submit', session.role);
 
   if (!(await catalogService.isPeriodOpen(enrollment.periodId))) {
     throw new ConflictError(
@@ -150,7 +151,7 @@ export async function submit(id: string, session: SessionUser): Promise<Enrollme
 /** Devuelve una inscripción rechazada a estado editable. */
 export async function reopen(id: string, session: SessionUser): Promise<EnrollmentDto> {
   const enrollment = await loadOwned(id, session);
-  const nextStatus = applyTransition(enrollment.status, 'reopen');
+  const nextStatus = applyTransition(enrollment.status, 'reopen', session.role);
   return present(await enrollmentRepository.updateStatus(id, nextStatus));
 }
 

@@ -38,7 +38,7 @@ export function sessionQueryOptions() {
 }
 
 /** Ruta de inicio de cada rol. Un solo sitio donde vive esa correspondencia. */
-export function homePathFor(role: Role): '/aspirante' | '/estudiante' | '/admin' {
+export function homePathFor(role: Role): '/aspirante' | '/estudiante' | '/admin' | '/facultad' {
   switch (role) {
     case 'APPLICANT':
       return '/aspirante';
@@ -46,6 +46,8 @@ export function homePathFor(role: Role): '/aspirante' | '/estudiante' | '/admin'
       return '/estudiante';
     case 'ADMIN':
       return '/admin';
+    case 'DEAN':
+      return '/facultad';
   }
 }
 

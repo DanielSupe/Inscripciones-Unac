@@ -4,7 +4,12 @@ import * as catalogRepository from './catalog.repository';
 import type { AcademicPeriod as PeriodRow, AcademicProgram as ProgramRow } from './catalog.repository';
 
 function toProgram(row: ProgramRow): AcademicProgram {
-  return { id: row.id, code: row.code, name: row.name };
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    faculty: { id: row.faculty.id, code: row.faculty.code, name: row.faculty.name },
+  };
 }
 
 function toPeriod(row: PeriodRow): AcademicPeriod {
@@ -81,3 +86,18 @@ export async function nextReceiptSequence(periodId: string): Promise<number> {
 }
 
 export { toPeriod, toProgram };
+
+/**
+ * Quién dirige la facultad del programa elegido, si hay alguien.
+ *
+ * Los módulos se hablan por services: `enrollment` pregunta aquí en vez de
+ * alcanzar el repositorio del catálogo.
+ */
+export async function findDeanOfProgram(programId: string): Promise<string | null> {
+  return catalogRepository.findDeanOfProgram(programId);
+}
+
+/** La facultad que dirige una persona, si dirige alguna. */
+export async function findFacultyLedBy(userId: string) {
+  return catalogRepository.findFacultyLedBy(userId);
+}

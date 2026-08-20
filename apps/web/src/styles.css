@@ -1363,3 +1363,48 @@ textarea {
     border-top: none;
   }
 }
+
+/* ─── Entrevista de admisión ───────────────────────────────────────────────── */
+
+.cita {
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--sion-azul);
+  border-radius: 6px;
+  padding: 1rem 1.25rem;
+  background: #fff;
+}
+.cita__cuando {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  /* La fecha se lee, no se descifra: primera en mayúscula y el resto tal cual. */
+  text-transform: none;
+}
+.cita__cuando::first-letter {
+  text-transform: uppercase;
+}
+.cita__donde {
+  margin: 0;
+  color: var(--tenue);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+.cita__resultado {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ok);
+}
+.cita__espera {
+  color: var(--tenue);
+}
+
+.historial {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--tenue);
+  font-size: 0.85rem;
+}
+.historial li + li {
+  margin-top: 0.2rem;
+}

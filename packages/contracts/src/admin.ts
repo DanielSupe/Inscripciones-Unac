@@ -112,10 +112,14 @@ export const reviewItemSchema = z.object({
   /** El titular fue eliminado: la inscripción sobrevive y hay que poder verlo. */
   applicantDeleted: z.boolean(),
   programName: z.string().nullable(),
+  /** A qué facultad corresponde decidir. Nula mientras no haya programa elegido. */
+  facultyName: z.string().nullable(),
   periodCode: z.string(),
   submittedAt: z.string().nullable(),
   paymentStatus: z.enum(['PENDING', 'VERIFIED']).nullable(),
   paymentOverdue: z.boolean(),
+  /** Fecha de la entrevista en pie, si ya se agendó. */
+  interviewAt: z.string().nullable(),
 });
 export type ReviewItem = z.infer<typeof reviewItemSchema>;
 

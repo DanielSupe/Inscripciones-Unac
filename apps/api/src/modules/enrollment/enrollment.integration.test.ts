@@ -80,9 +80,15 @@ beforeAll(async () => {
   const hasta = new Date(ahora);
   hasta.setMonth(hasta.getMonth() + 3);
 
+  const facultad = await prisma.faculty.upsert({
+    where: { code: 'FAC-PRU' },
+    create: { code: 'FAC-PRU', name: 'Facultad de prueba' },
+    update: {},
+  });
+
   const program = await prisma.academicProgram.upsert({
     where: { code: 'PRU' },
-    create: { code: 'PRU', name: 'Programa de prueba' },
+    create: { code: 'PRU', name: 'Programa de prueba', facultyId: facultad.id },
     update: {},
   });
   programId = program.id;

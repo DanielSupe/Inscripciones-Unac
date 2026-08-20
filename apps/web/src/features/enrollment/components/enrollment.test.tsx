@@ -46,6 +46,9 @@ function inscripcion(overrides: Partial<Enrollment> = {}): Enrollment {
     submittedAt: null,
     rejectionReason: null,
     receipt: null,
+    interview: null,
+    pastInterviews: [],
+    decidedAt: null,
     ...overrides,
   };
 }
@@ -183,6 +186,105 @@ describe('ProcessPanel', () => {
 
     const total = ATTACHMENT_TYPES.length;
     expect(screen.getByText(`${total} de ${total} adjuntados`)).toBeInTheDocument();
+  });
+
+  // El aspirante tiene que poder saber en qué punto va sin preguntar por otro
+  // canal: no hay correo, así que verlo aquí es la única forma de enterarse.
+  it('explica cada estado nuevo del proceso, sin dejar ninguno mudo', () => {
+    const textos: Record<string, RegExp> = {
+      PENDING_INTERVIEW: /pasó a la facultad/i,
+      INTERVIEW_SCHEDULED: /Ya tienes fecha/i,
+      INTERVIEW_HELD: /ya se realizó/i,
+    };
+
+    for (const [status, texto] of Object.entries(textos)) {
+      const { unmount } = renderizar(
+        <ProcessPanel
+          enrollment={inscripcion({
+            status: status as Enrollment['status'],
+            pendingSteps: [],
+          })}
+        />,
+      );
+      expect(screen.getByText(texto)).toBeInTheDocument();
+      unmount();
+    }
+  });
+
+  it('muestra el día y cómo asistir cuando ya hay cita', () => {
+    renderizar(
+      <ProcessPanel
+        enrollment={inscripcion({
+          status: 'INTERVIEW_SCHEDULED',
+          pendingSteps: [],
+          interview: {
+            id: 'i1',
+            scheduledAt: '2026-09-15T19:30:00.000Z',
+            modality: 'ON_SITE',
+            location: 'Bloque administrativo, oficina 201',
+            meetingUrl: null,
+            outcome: null,
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/Bloque administrativo, oficina 201/)).toBeInTheDocument();
+    // 19:30 UTC son las 2:30 p. m. en Colombia: se presenta en su hora, no en la
+    // del servidor.
+    expect(screen.getByText(/2:30/)).toBeInTheDocument();
+  });
+
+  it('una entrevista virtual se ofrece como enlace abrible', () => {
+    renderizar(
+      <ProcessPanel
+        enrollment={inscripcion({
+          status: 'INTERVIEW_SCHEDULED',
+          pendingSteps: [],
+          interview: {
+            id: 'i1',
+            scheduledAt: '2026-09-15T19:30:00.000Z',
+            modality: 'VIRTUAL',
+            location: null,
+            meetingUrl: 'https://reunion.example.com/abc',
+            outcome: null,
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: /reunion.example.com/ })).toBeInTheDocument();
+  });
+
+  it('sin fecha todavía, dice que la espera en vez de dejar el hueco vacío', () => {
+    renderizar(
+      <ProcessPanel enrollment={inscripcion({ status: 'PENDING_INTERVIEW', pendingSteps: [] })} />,
+    );
+
+    expect(screen.getByText(/te asignará la fecha de tu entrevista/i)).toBeInTheDocument();
+  });
+
+  it('tras una inasistencia explica que habrá fecha nueva', () => {
+    renderizar(
+      <ProcessPanel
+        enrollment={inscripcion({
+          status: 'PENDING_INTERVIEW',
+          pendingSteps: [],
+          pastInterviews: [
+            {
+              id: 'i0',
+              scheduledAt: '2026-09-01T19:30:00.000Z',
+              modality: 'ON_SITE',
+              location: 'Oficina 201',
+              meetingUrl: null,
+              outcome: 'NO_SHOW',
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/No se registró tu asistencia/i)).toBeInTheDocument();
   });
 
   it('en borrador dice qué falta y ofrece continuar', () => {

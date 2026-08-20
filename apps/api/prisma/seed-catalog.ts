@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
+import { FACULTAD_DE_PROGRAMA } from './seed-faculties';
 
 /**
  * Programas académicos ofertados.
@@ -48,11 +49,25 @@ function periodoInicial() {
  * identidad estable de programas y periodos.
  */
 export async function seedCatalog(prisma: PrismaClient): Promise<void> {
+  const facultades = await prisma.faculty.findMany({ select: { id: true, code: true } });
+  const idPorCodigo = new Map(facultades.map((f) => [f.code, f.id]));
+
   for (const programa of PROGRAMAS) {
+    const facultyId = idPorCodigo.get(FACULTAD_DE_PROGRAMA[programa.code] ?? '');
+
+    // Un programa sin facultad produciría inscripciones que no llegan a ningún
+    // decano. Mejor detener la siembra que crearlas.
+    if (!facultyId) {
+      throw new Error(
+        `El programa ${programa.code} no tiene facultad en el reparto del seed. ` +
+          'Añádelo a FACULTAD_DE_PROGRAMA antes de volver a sembrar.',
+      );
+    }
+
     await prisma.academicProgram.upsert({
       where: { code: programa.code },
-      create: { ...programa, isActive: true },
-      update: { name: programa.name },
+      create: { ...programa, isActive: true, facultyId },
+      update: { name: programa.name, facultyId },
     });
   }
 
