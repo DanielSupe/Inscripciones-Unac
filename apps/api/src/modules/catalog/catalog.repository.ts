@@ -42,6 +42,11 @@ export async function findFacultyLedBy(userId: string): Promise<Faculty | null> 
   return prisma.faculty.findUnique({ where: { deanUserId: userId } });
 }
 
+/** Una facultad concreta, esté o no activa. */
+export async function findFacultyById(id: string): Promise<Faculty | null> {
+  return prisma.faculty.findUnique({ where: { id } });
+}
+
 /**
  * Periodo cuya ventana contiene la fecha dada.
  *

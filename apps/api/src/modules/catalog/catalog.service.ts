@@ -101,3 +101,12 @@ export async function findDeanOfProgram(programId: string): Promise<string | nul
 export async function findFacultyLedBy(userId: string) {
   return catalogRepository.findFacultyLedBy(userId);
 }
+
+/** Comprueba que la facultad exista y esté activa. Lo usa el módulo de metas. */
+export async function requireActiveFaculty(facultyId: string) {
+  const faculty = await catalogRepository.findFacultyById(facultyId);
+  if (!faculty || !faculty.isActive) {
+    throw new NotFoundError('No encontramos esa facultad.');
+  }
+  return faculty;
+}

@@ -22,6 +22,7 @@ import { UsersTable } from './features/admin/components/users-table';
 import { ReviewInbox } from './features/admin/components/review-inbox';
 import { ReviewDetail } from './features/admin/components/review-detail';
 import { PeriodsManager } from './features/admin/components/periods-manager';
+import { GoalsTable } from './features/goals/components/goals-table';
 import { DeanInbox } from './features/dean/components/dean-inbox';
 import { DeanDetail } from './features/dean/components/dean-detail';
 
@@ -214,6 +215,12 @@ const adminPeriodsRoute = createRoute({
   component: PeriodsManager,
 });
 
+const adminGoalsRoute = createRoute({
+  getParentRoute: () => adminLayout,
+  path: '/admin/metas',
+  component: GoalsTable,
+});
+
 /** Zona de la facultad. Mismo patrón que la de administración: guard en el padre. */
 const deanLayout = createRoute({
   getParentRoute: () => protectedLayout,
@@ -250,6 +257,7 @@ const routeTree = rootRoute.addChildren([
     studentLayout.addChildren([studentHomeRoute, studentReceiptRoute]),
     adminLayout.addChildren([
       adminHomeRoute,
+      adminGoalsRoute,
       adminUsersRoute,
       adminInboxRoute,
       adminDetailRoute,

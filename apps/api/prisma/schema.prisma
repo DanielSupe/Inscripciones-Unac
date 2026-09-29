@@ -155,8 +155,25 @@ model Faculty {
   dean       User?   @relation("FacultyDean", fields: [deanUserId], references: [id])
 
   programs AcademicProgram[]
+  goal     FacultyEnrollmentGoal?
 
   @@map("faculties")
+}
+
+/// Meta de matriculados de una facultad. Vive en su propia tabla y no como
+/// columna de Faculty porque «sin meta» y «meta cero» son cosas distintas, y
+/// porque la meta por periodo —el paso siguiente— solo necesita añadir aquí la
+/// columna periodId y ampliar la clave única.
+model FacultyEnrollmentGoal {
+  id        String   @id @default(cuid())
+  facultyId String   @unique
+  faculty   Faculty  @relation(fields: [facultyId], references: [id])
+  /// Cuántos matriculados se esperan. Siempre >= 1: la ausencia de meta se
+  /// representa borrando la fila, no guardando un cero.
+  target    Int
+  updatedAt DateTime @updatedAt
+
+  @@map("faculty_enrollment_goals")
 }
 
 /// Programa al que se puede aspirar. Se siembra; no hay CRUD.
