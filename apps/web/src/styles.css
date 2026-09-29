@@ -1431,23 +1431,219 @@ textarea {
 
 /* ─── Tablero del administrador ────────────────────────────────────────────── */
 
+/* Colores de las gráficas. Las marcas de datos usan el azul de referencia y no
+   el institucional: #2d5b84 falla el piso de croma del validador de paleta y en
+   una barra se lee gris. El institucional queda para títulos y enlaces. */
 .tablero {
+  --viz-serie: #2a78d6;
+  --viz-pista: #cde2fb;
+  --viz-meta: #1a1a1a;
+  --viz-rejilla: #e1e0d9;
+  --viz-alerta: #fab219;
+  --viz-superficie: #ffffff;
+
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
   gap: 1.25rem;
   margin-top: 1.5rem;
 }
-.tablero__bloque {
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--borde);
-  border-radius: 6px;
+
+.tarjeta {
+  padding: 1.25rem 1.5rem 1.5rem;
+  background: var(--viz-superficie);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(11, 11, 11, 0.06),
+    0 1px 3px rgba(11, 11, 11, 0.06);
 }
-.tablero__bloque h2 {
+.tarjeta--ancha {
+  grid-column: 1 / -1;
+}
+.tarjeta__titulo {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--sion-tinta);
 }
-/* Cada par dt/dd va envuelto para que el lector de pantalla los lea juntos;
-   `contents` deja que el grid de la ficha los siga alineando. */
-.ficha__fila {
-  display: contents;
+.tarjeta__nota {
+  margin: 0.15rem 0 1rem;
+  font-size: 0.8rem;
+  color: var(--tenue);
+}
+.tarjeta__pie {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+}
+.tarjeta__pie a {
+  color: var(--sion-azul);
+}
+
+/* Cifra destacada. Proporcional, no tabular: a este tamaño los dígitos de
+   ancho fijo se ven sueltos. */
+.cifra {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.cifra__valor {
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--sion-tinta);
+}
+.cifra__contexto {
+  color: var(--tenue);
+  font-size: 0.9rem;
+}
+
+/* Medidor: pista y relleno de la misma rampa, extremo redondeado. */
+.medidor {
+  position: relative;
+  height: 10px;
+  margin: 0.9rem 0 1.1rem;
+  background: var(--viz-pista);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.medidor__relleno {
+  height: 100%;
+  background: var(--viz-serie);
+  border-radius: 999px;
+}
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+/* La cifra va al pie: si una etiqueta ocupa dos líneas, las cifras siguen alineadas. */
+.indicador {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  background: #f6f7f8;
+  border-radius: 8px;
+}
+.indicador dt {
+  font-size: 0.75rem;
+  color: var(--tenue);
+}
+.indicador dd {
+  margin: 0.1rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--sion-tinta);
+}
+
+/* Barras horizontales: etiqueta, pista con la barra y cifra en una fila. */
+.barras {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.barras__fila {
+  display: grid;
+  grid-template-columns: minmax(8rem, 15rem) 1fr minmax(4.5rem, auto);
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+.barras__etiqueta {
+  color: var(--sion-tinta);
+  overflow-wrap: anywhere;
+}
+.barras__pista {
+  position: relative;
+  height: 14px;
+  background: linear-gradient(var(--viz-rejilla), var(--viz-rejilla)) left center / 100% 1px
+    no-repeat;
+}
+.barras__barra {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  background: var(--viz-serie);
+  border-radius: 0 4px 4px 0;
+}
+/* La meta es una referencia, no una serie: tinta principal y un trazo fino. */
+.barras__meta {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--viz-meta);
+  border-radius: 1px;
+}
+.barras__cifra {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--sion-tinta);
+  white-space: nowrap;
+}
+.barras__cifra--tenue {
+  color: var(--tenue);
+}
+
+.leyenda {
+  display: flex;
+  gap: 1rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+  color: var(--tenue);
+}
+.leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.leyenda__serie {
+  width: 12px;
+  height: 8px;
+  background: var(--viz-serie);
+  border-radius: 2px;
+}
+.leyenda__meta {
+  width: 2px;
+  height: 12px;
+  background: var(--viz-meta);
+}
+
+.pendientes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--sion-tinta);
+}
+/* El color de alerta nunca va solo: lo acompañan el icono y la etiqueta. */
+.pendientes__icono {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--viz-alerta);
+  color: #1a1a1a;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+@media (max-width: 30rem) {
+  .barras__fila {
+    grid-template-columns: 1fr auto;
+  }
+  .barras__pista {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }

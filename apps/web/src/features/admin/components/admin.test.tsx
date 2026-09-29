@@ -3,10 +3,18 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Enrollment, ManagedUser, Paged, ReviewItem } from '@repo/contracts';
+import type {
+  AdminDashboard as AdminDashboardData,
+  Enrollment,
+  FacultyGoalRow,
+  ManagedUser,
+  Paged,
+  ReviewItem,
+} from '@repo/contracts';
 import { UsersTable } from './users-table';
 import { ReviewInbox } from './review-inbox';
 import { ReviewDetail } from './review-detail';
+import { AdminDashboard } from './admin-dashboard';
 
 vi.mock('@tanstack/react-router', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@tanstack/react-router');
@@ -272,5 +280,83 @@ describe('ReviewDetail', () => {
     await screen.findByText(/Aprobada/);
     expect(screen.queryByRole('button', { name: 'Aprobar' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Rechazar por trámite' })).not.toBeInTheDocument();
+  });
+});
+
+describe('AdminDashboard', () => {
+  const INDICADORES: AdminDashboardData = {
+    goal: {
+      globalTarget: 120,
+      enrolledTowardGoal: 84,
+      progressPercent: 70,
+      totalEnrolled: 115,
+      facultiesWithoutGoal: 1,
+    },
+    funnel: {
+      DRAFT: 5,
+      SUBMITTED: 3,
+      UNDER_REVIEW: 0,
+      PENDING_INTERVIEW: 0,
+      INTERVIEW_SCHEDULED: 0,
+      INTERVIEW_HELD: 0,
+      APPROVED: 115,
+      REJECTED: 0,
+    },
+    payments: { PENDING: 7, VERIFIED: 4 },
+  };
+
+  const FACULTADES: FacultyGoalRow[] = [
+    {
+      facultyId: 'fac-ing',
+      facultyName: 'Ingeniería',
+      target: 120,
+      enrolledCount: 84,
+      progressPercent: 70,
+    },
+    {
+      facultyId: 'fac-sal',
+      facultyName: 'Salud',
+      target: null,
+      enrolledCount: 31,
+      progressPercent: null,
+    },
+  ];
+
+  function servir(facultades: Response) {
+    fetchMock.mockImplementation((input) => {
+      const url = input instanceof Request ? input.url : String(input);
+      return Promise.resolve(
+        url.includes('/admin/faculty-goals') ? facultades : responde(INDICADORES),
+      );
+    });
+  }
+
+  it('muestra cada facultad con sus cifras, y marca la que no tiene meta', async () => {
+    servir(responde(FACULTADES));
+    renderizar(<AdminDashboard />);
+
+    expect(await screen.findByText('84 de 120')).toBeInTheDocument();
+    expect(screen.getByText('31 · sin meta')).toBeInTheDocument();
+    expect(screen.getByRole('meter', { name: 'Avance de la meta global' })).toHaveAttribute(
+      'aria-valuenow',
+      '70',
+    );
+    expect(screen.getByText('7 recibos pendientes de verificar')).toBeInTheDocument();
+  });
+
+  it('si falla el avance por facultad, lo anuncia sin ocultar el resto del tablero', async () => {
+    servir({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({ error: { code: 'INTERNAL_ERROR', message: 'Fallo' } }),
+    } as Response);
+    renderizar(<AdminDashboard />);
+
+    expect(await screen.findByText('No se pudo cargar el avance por facultad.')).toHaveAttribute(
+      'role',
+      'alert',
+    );
+    expect(await screen.findByText('Aspirantes por etapa')).toBeInTheDocument();
+    expect(screen.getByRole('meter', { name: 'Recibos verificados' })).toBeInTheDocument();
   });
 });
