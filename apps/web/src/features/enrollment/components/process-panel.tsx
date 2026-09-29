@@ -52,6 +52,13 @@ const EXPLICACION: Record<EnrollmentStatus, { titulo: string; texto: string; ton
 export function ProcessPanel({ enrollment }: { enrollment: Enrollment }) {
   const reopen = useReopenEnrollment(enrollment.id);
   const estado = EXPLICACION[enrollment.status];
+  // La facultad puede aprobar antes de la entrevista; si había cita, quedó
+  // anulada. Enseñarla evita que siga contando con presentarse a ella.
+  const citaAnulada =
+    enrollment.status === 'APPROVED'
+      ? enrollment.pastInterviews.find((cita) => cita.outcome === 'CANCELLED')
+      : undefined;
+  const citaVisible = enrollment.interview ?? citaAnulada;
 
   return (
     <>
@@ -64,6 +71,14 @@ export function ProcessPanel({ enrollment }: { enrollment: Enrollment }) {
         </p>
         <p>{estado.texto}</p>
       </div>
+
+      {enrollment.status === 'APPROVED' && enrollment.decidedAt && (
+        <p>
+          Aprobada por la facultad el{' '}
+          {new Date(enrollment.decidedAt).toLocaleDateString('es-CO')}.
+          {citaAnulada && ' La entrevista que tenías agendada quedó sin efecto.'}
+        </p>
+      )}
 
       {enrollment.status === 'REJECTED' && enrollment.rejectionReason && (
         <div className="aviso-caja aviso-caja--error" role="alert">
@@ -91,10 +106,10 @@ export function ProcessPanel({ enrollment }: { enrollment: Enrollment }) {
         </>
       )}
 
-      {enrollment.interview && (
+      {citaVisible && (
         <section aria-labelledby="titulo-entrevista">
           <h2 id="titulo-entrevista">Tu entrevista</h2>
-          <InterviewCard interview={enrollment.interview} />
+          <InterviewCard interview={citaVisible} />
         </section>
       )}
 

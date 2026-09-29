@@ -145,22 +145,16 @@ export async function handOver(id: string, session: SessionUser): Promise<Enroll
 /**
  * Aprueba y promueve.
  *
- * La transición se valida aquí —para dar el mensaje correcto si el estado o el
- * rol no lo admiten— y la escritura ocurre en la transacción del repositorio,
- * que además comprueba dentro el pago y la entrevista.
+ * Solo hay dos condiciones, y ninguna depende de otros datos: que sea una
+ * inscripción de la facultad de quien firma —lo comprueba `loadOwnedRow`— y que
+ * esté en su tramo. El decano decide cuándo, sin esperar a la entrevista ni al
+ * recibo; la escritura ocurre en la transacción del repositorio.
  */
 export async function approve(id: string, session: SessionUser): Promise<EnrollmentDto> {
   const enrollment = await enrollmentService.loadOwnedRow(id, session);
   applyTransition(enrollment.status, 'approve', session.role);
 
-  const result = await enrollmentRepository.approveAndPromote(id, session.id);
-  if (!result.ok) {
-    throw new ConflictError(
-      result.reason === 'sin-pago-verificado'
-        ? 'No se puede aprobar hasta que el pago del recibo conste verificado.'
-        : 'No se puede aprobar hasta que la entrevista conste realizada.',
-    );
-  }
+  await enrollmentRepository.approveAndPromote(id, session.id);
 
   return enrollmentService.findById(id, session);
 }

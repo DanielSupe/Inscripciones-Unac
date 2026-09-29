@@ -192,33 +192,19 @@ export async function listForReview(
 }
 
 /**
- * Aprueba la inscripción y promueve a su dueño, en una sola transacción.
+ * Aprueba la inscripción, promueve a su dueño y cierra la cita pendiente, en
+ * una sola transacción.
  *
- * El pago y la entrevista se comprueban **dentro**: hacerlo antes dejaría una
- * ventana en la que otra persona podría deshacer la verificación o mover la
- * cita entre la comprobación y la escritura.
+ * Las tres escrituras van juntas porque una inscripción aprobada cuyo dueño
+ * sigue siendo aspirante —o un estudiante sin inscripción aprobada, o un
+ * aprobado que sigue citado a una entrevista— son estados que nadie podría
+ * explicar mirando la base de datos.
  *
- * Y las dos escrituras van juntas porque una inscripción aprobada cuyo dueño
- * sigue siendo aspirante —o un estudiante sin inscripción aprobada— son estados
- * que nadie podría explicar mirando la base de datos.
+ * Ya no comprueba el pago ni la entrevista: el decano decide en cualquier punto
+ * de su tramo, y el estado de origen lo comprueba el guardián de transiciones.
  */
-export async function approveAndPromote(
-  id: string,
-  deciderId: string,
-): Promise<{ ok: true } | { ok: false; reason: 'sin-pago-verificado' | 'sin-entrevista' }> {
-  return prisma.$transaction(async (tx) => {
-    const receipt = await tx.paymentReceipt.findUnique({ where: { enrollmentId: id } });
-    if (!receipt || receipt.status !== 'VERIFIED') {
-      return { ok: false as const, reason: 'sin-pago-verificado' as const };
-    }
-
-    const entrevista = await tx.interview.findFirst({
-      where: { enrollmentId: id, outcome: 'HELD' },
-    });
-    if (!entrevista) {
-      return { ok: false as const, reason: 'sin-entrevista' as const };
-    }
-
+export async function approveAndPromote(id: string, deciderId: string): Promise<void> {
+  await prisma.$transaction(async (tx) => {
     const enrollment = await tx.enrollment.update({
       where: { id },
       data: {
@@ -233,7 +219,12 @@ export async function approveAndPromote(
 
     await tx.user.update({ where: { id: enrollment.userId }, data: { role: 'STUDENT' } });
 
-    return { ok: true as const };
+    // `updateMany` y no `update`: aprobar desde PENDING_INTERVIEW no tiene
+    // ninguna cita abierta que cerrar, y afectar a cero filas es el resultado
+    // correcto, no un error.
+    await tx.interview.updateMany({
+      where: { enrollmentId: id, outcome: null },
+      data: { outcome: 'CANCELLED', closedAt: new Date() },
+    });
   });
 }
-

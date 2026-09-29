@@ -100,6 +100,10 @@ entrevista agendada → con entrevista realizada** → aprobada o rechazada. Des
 vuelve a diligenciando para corregir, y desde una inasistencia se vuelve a la espera de
 entrevista.
 
+El tramo de la entrevista SHALL tener además una **salida directa a aprobada**: el DEAN puede
+aprobar desde cualquiera de sus tres estados, sin recorrerlos en orden. Es el único atajo previsto,
+y solo lo abre el sí del decano: el rechazo conserva sus momentos.
+
 Cada tramo tiene su dueño: el aspirante envía, el ADMIN toma y entrega, y el DEAN agenda,
 declara el resultado de la entrevista y decide. Se puede rechazar en dos puntos —en revisión por
 el ADMIN, y en manos del DEAN— y en ningún otro.
@@ -109,10 +113,16 @@ el ADMIN, y en manos del DEAN— y en ningún otro.
 - **WHEN** se intenta llevar una inscripción de diligenciando a aprobada sin pasar por revisión
 - **THEN** la operación se rechaza y el estado no cambia
 
-#### Scenario: No se salta la entrevista
+#### Scenario: El atajo del decano
 
-- **WHEN** se intenta aprobar una inscripción que acaba de entregarse al decano, sin entrevista
-  agendada ni realizada
+- **WHEN** el decano aprueba una inscripción que acaba de recibir, sin entrevista agendada ni
+  realizada
+- **THEN** la inscripción queda aprobada, porque el camino directo a aprobada está previsto desde
+  todo el tramo del decano
+
+#### Scenario: El atajo no alcanza a lo que aún no se ha entregado
+
+- **WHEN** se intenta aprobar una inscripción que sigue en revisión del administrador
 - **THEN** la operación se rechaza y el estado no cambia
 
 #### Scenario: No se agenda antes de la entrega
@@ -131,10 +141,11 @@ el ADMIN, y en manos del DEAN— y en ningún otro.
 - **WHEN** se intenta entregar al decano una inscripción cuyo recibo todavía no consta como pagado
 - **THEN** la entrega se rechaza indicando que falta verificar el pago
 
-#### Scenario: Aprobar exige que el pago siga verificado
+#### Scenario: Aprobar no exige que el pago siga verificado
 
-- **WHEN** se intenta aprobar una inscripción cuyo recibo no consta como pagado
-- **THEN** la aprobación se rechaza indicando que falta verificar el pago
+- **WHEN** el decano aprueba una inscripción cuyo recibo dejó de constar como pagado después de
+  entregarse
+- **THEN** la aprobación se realiza igualmente, y el recibo conserva su estado
 
 #### Scenario: Una inasistencia devuelve el proceso a esperar fecha
 
@@ -151,6 +162,10 @@ fue rechazada SHALL mostrarle el motivo escrito por quien la rechazó.
 Cuando el proceso dependa de otra persona, el sistema SHALL decirlo así, para que el silencio no
 se confunda con un trámite olvidado. Cuando dependa del aspirante —presentarse a una entrevista—
 SHALL decirle exactamente cuándo y cómo.
+
+Una vez aprobada, el sistema SHALL mostrarle que la facultad lo aprobó y desde cuándo, **también
+cuando la aprobación llegó sin entrevista**, y SHALL dejar de pedirle cualquier paso que ya no
+corresponde: ni esperar fecha, ni presentarse a una cita.
 
 #### Scenario: Inscripción en revisión
 
@@ -189,7 +204,19 @@ SHALL decirle exactamente cuándo y cómo.
 #### Scenario: Inscripción aprobada
 
 - **WHEN** un aspirante consulta su proceso después de que le aprobaran la inscripción
-- **THEN** ve que fue aprobada
+- **THEN** ve que fue aprobada y desde cuándo
+
+#### Scenario: Aprobada sin haber tenido entrevista
+
+- **WHEN** un aspirante consulta su proceso después de que el decano lo aprobara mientras esperaba
+  fecha de entrevista
+- **THEN** ve que la facultad lo aprobó y desde cuándo, y ya no se le dice que espere una fecha
+
+#### Scenario: Aprobada con una cita por delante
+
+- **WHEN** un aspirante consulta su proceso después de que el decano lo aprobara teniendo una
+  entrevista agendada para más adelante
+- **THEN** ve que fue aprobado y que esa cita quedó sin efecto, en lugar de seguir citado
 
 ### Requirement: Una inscripción rechazada se corrige y se reenvía
 

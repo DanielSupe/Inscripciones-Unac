@@ -18,10 +18,12 @@ const PERMITIDAS: ReadonlyArray<[EnrollmentStatus, Accion, Role, EnrollmentStatu
   ['UNDER_REVIEW', 'handOver', 'ADMIN', 'PENDING_INTERVIEW'],
   ['UNDER_REVIEW', 'rejectByAdmin', 'ADMIN', 'REJECTED'],
   ['PENDING_INTERVIEW', 'schedule', 'DEAN', 'INTERVIEW_SCHEDULED'],
+  ['PENDING_INTERVIEW', 'approve', 'DEAN', 'APPROVED'],
   ['PENDING_INTERVIEW', 'rejectByDean', 'DEAN', 'REJECTED'],
   ['INTERVIEW_SCHEDULED', 'reschedule', 'DEAN', 'INTERVIEW_SCHEDULED'],
   ['INTERVIEW_SCHEDULED', 'markHeld', 'DEAN', 'INTERVIEW_HELD'],
   ['INTERVIEW_SCHEDULED', 'markNoShow', 'DEAN', 'PENDING_INTERVIEW'],
+  ['INTERVIEW_SCHEDULED', 'approve', 'DEAN', 'APPROVED'],
   ['INTERVIEW_SCHEDULED', 'rejectByDean', 'DEAN', 'REJECTED'],
   ['INTERVIEW_HELD', 'approve', 'DEAN', 'APPROVED'],
   ['INTERVIEW_HELD', 'rejectByDean', 'DEAN', 'REJECTED'],
@@ -81,9 +83,29 @@ describe('máquina de estados de la inscripción', () => {
     expect(() => applyTransition('INTERVIEW_HELD', 'approve', 'APPLICANT')).toThrow(/permiso/i);
   });
 
-  it('no deja aprobar sin que la entrevista se haya realizado', () => {
-    expect(() => applyTransition('PENDING_INTERVIEW', 'approve', 'DEAN')).toThrow(/entrevista/i);
-    expect(() => applyTransition('INTERVIEW_SCHEDULED', 'approve', 'DEAN')).toThrow(/entrevista/i);
+  it('deja aprobar desde cualquier punto del tramo del decano', () => {
+    expect(applyTransition('PENDING_INTERVIEW', 'approve', 'DEAN')).toBe('APPROVED');
+    expect(applyTransition('INTERVIEW_SCHEDULED', 'approve', 'DEAN')).toBe('APPROVED');
+    expect(applyTransition('INTERVIEW_HELD', 'approve', 'DEAN')).toBe('APPROVED');
+  });
+
+  it('no deja aprobar lo que el administrador todavía no ha entregado', () => {
+    for (const status of ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW'] as const) {
+      expect(() => applyTransition(status, 'approve', 'DEAN')).toThrow(/facultad/i);
+    }
+  });
+
+  it('no deja aprobar una inscripción ya resuelta', () => {
+    for (const status of ['APPROVED', 'REJECTED'] as const) {
+      expect(() => applyTransition(status, 'approve', 'DEAN')).toThrow(/facultad/i);
+    }
+  });
+
+  // El atajo es solo para el sí: rechazar con la cita en pie sigue exigiendo
+  // declarar antes qué pasó con ella.
+  it('el rechazo del decano conserva sus momentos', () => {
+    expect(applyTransition('INTERVIEW_SCHEDULED', 'rejectByDean', 'DEAN')).toBe('REJECTED');
+    expect(() => applyTransition('UNDER_REVIEW', 'rejectByDean', 'DEAN')).toThrow(/facultad/i);
   });
 
   it('no deja agendar antes de que el administrador entregue', () => {

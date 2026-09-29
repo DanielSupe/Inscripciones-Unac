@@ -21,13 +21,21 @@ import { ConflictError, ForbiddenError } from '../../shared/errors';
  *     │                            └────────  INTERVIEW_SCHEDULED ───┘
  *     │                                                 │ markHeld
  *     │                                                 ▼
- *     └────────────── reopen ──────  REJECTED ◀──  INTERVIEW_HELD ──approve──▶ APPROVED
+ *     └────────────── reopen ──────  REJECTED ◀──  INTERVIEW_HELD
+ *
+ *                         ─── approve ──▶ APPROVED
+ *                    desde cualquiera de los tres estados de la facultad
  *
  * Rechazar son dos acciones y no una: el administrador rechaza por un problema
  * de trámite mientras la tiene en revisión, y el decano rechaza por criterio
- * académico una vez cerrada la entrevista. Fundirlas obligaría a que el rol
- * autorizado dependiera del estado de origen, que es justo la clase de regla
- * implícita que este archivo existe para evitar.
+ * académico una vez la inscripción está en su facultad. Fundirlas obligaría a
+ * que el rol autorizado dependiera del estado de origen, que es justo la clase
+ * de regla implícita que este archivo existe para evitar.
+ *
+ * Aprobar sale de los tres estados del decano y no solo del último: la decisión
+ * académica puede estar tomada antes de la entrevista, y obligar a celebrarla
+ * para poder firmar solo conseguía citas fingidas. El rechazo no tiene ese
+ * atajo; solo lo tiene el sí.
  */
 export const ENROLLMENT_ACTIONS = [
   'submit',
@@ -105,10 +113,10 @@ const TRANSITIONS: Record<EnrollmentAction, Transition> = {
     rejection: 'Solo se puede registrar una inasistencia sobre una entrevista agendada.',
   },
   approve: {
-    from: ['INTERVIEW_HELD'],
+    from: ['PENDING_INTERVIEW', 'INTERVIEW_SCHEDULED', 'INTERVIEW_HELD'],
     to: 'APPROVED',
     roles: ['DEAN'],
-    rejection: 'Solo se puede aprobar una inscripción cuya entrevista ya se haya realizado.',
+    rejection: 'Solo se puede aprobar una inscripción que esté en manos de la facultad.',
   },
   rejectByDean: {
     from: ['PENDING_INTERVIEW', 'INTERVIEW_SCHEDULED', 'INTERVIEW_HELD'],
@@ -141,9 +149,9 @@ export function rolesFor(action: EnrollmentAction): readonly Role[] {
  * le cuenta en qué punto está una inscripción que no le corresponde.
  *
  * Las condiciones que dependen de datos —que la inscripción esté completa, que
- * el pago esté verificado, que la entrevista ya ocurriera— las comprueba el
- * service antes de llamar aquí, porque para saberlas hay que ir a la base de
- * datos y esta función es deliberadamente pura.
+ * el pago esté verificado para entregarla— las comprueba el service antes de
+ * llamar aquí, porque para saberlas hay que ir a la base de datos y esta
+ * función es deliberadamente pura.
  */
 export function applyTransition(
   from: EnrollmentStatus,

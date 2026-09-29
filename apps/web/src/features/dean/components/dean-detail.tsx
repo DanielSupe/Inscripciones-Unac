@@ -30,6 +30,7 @@ export function DeanDetail({ enrollmentId }: { enrollmentId: string }) {
   const visor = useDocumentViewer();
   const [agendando, setAgendando] = useState(false);
   const [motivo, setMotivo] = useState('');
+  const [confirmando, setConfirmando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // El reloj se toma una vez al montar en vez de en cada render: leerlo al
   // pintar haría que los botones cambiaran solos en un re-render cualquiera.
@@ -52,6 +53,12 @@ export function DeanDetail({ enrollmentId }: { enrollmentId: string }) {
   const e = detail.data;
   const d = e.data;
   const resuelta = e.status === 'APPROVED' || e.status === 'REJECTED';
+  // El decano decide en cualquier punto de su tramo, no solo con la entrevista
+  // realizada: la decisión académica puede estar tomada antes de la cita.
+  const enSuTramo =
+    e.status === 'PENDING_INTERVIEW' ||
+    e.status === 'INTERVIEW_SCHEDULED' ||
+    e.status === 'INTERVIEW_HELD';
   const yaOcurrio = e.interview
     ? new Date(e.interview.scheduledAt).getTime() <= montadoEn
     : false;
@@ -174,19 +181,50 @@ export function DeanDetail({ enrollmentId }: { enrollmentId: string }) {
         <>
           <h2>Decisión</h2>
 
+          {/* Aprobar deja de estar protegido por el estado, así que la
+              protección pasa a ser este paso de más: no hay deshacer, porque
+              aprobar promueve a estudiante. */}
           <div className="decision">
-            <button
-              type="button"
-              className="boton boton--primario"
-              onClick={() => void ejecutar(() => approve.mutateAsync())}
-              disabled={e.status !== 'INTERVIEW_HELD' || approve.isPending}
-            >
-              Aprobar
-            </button>
-            {e.status !== 'INTERVIEW_HELD' && (
-              <span className="campo__ayuda">
-                Solo puedes decidir cuando la entrevista conste realizada.
-              </span>
+            {confirmando ? (
+              <div className="aviso-caja" role="alert">
+                <p>
+                  Vas a aprobar la inscripción de {d.firstName} {d.lastName}.{' '}
+                  {e.interview
+                    ? `La entrevista del ${fechaHoraColombia(e.interview.scheduledAt)} quedará sin efecto.`
+                    : 'Pasará a ser estudiante sin entrevista.'}{' '}
+                  Esto no se puede deshacer.
+                </p>
+                <button
+                  type="button"
+                  className="boton boton--primario"
+                  onClick={() => {
+                    setConfirmando(false);
+                    void ejecutar(() => approve.mutateAsync());
+                  }}
+                  disabled={approve.isPending}
+                >
+                  Confirmar aprobación
+                </button>
+                <button type="button" onClick={() => { setConfirmando(false); }}>
+                  Cancelar
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="boton boton--primario"
+                  onClick={() => { setConfirmando(true); }}
+                  disabled={!enSuTramo || approve.isPending}
+                >
+                  Aprobar
+                </button>
+                {!enSuTramo && (
+                  <span className="campo__ayuda">
+                    Solo puedes decidir cuando la inscripción esté en tu facultad.
+                  </span>
+                )}
+              </>
             )}
           </div>
 

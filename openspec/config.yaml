@@ -29,10 +29,12 @@ context: |
     enrollment: DRAFT -> SUBMITTED -> UNDER_REVIEW -> APPROVED | REJECTED
     payment:    PENDING -> VERIFIED
 
-  Aprobar exige que el pago esté VERIFIED. El rechazo lleva un motivo escrito y
-  devuelve la inscripción a estado editable para que el aspirante la reenvíe.
-  Las transiciones se validan en el service; ningún endpoint acepta el estado
-  como campo escribible del payload.
+  Entregar la inscripción al decano exige que el pago esté VERIFIED; aprobarla no
+  lo exige, porque la decisión académica no depende de un trámite que el admin
+  puede deshacer. El rechazo lleva un motivo escrito y devuelve la inscripción a
+  estado editable para que el aspirante la reenvíe. Las transiciones se validan
+  en el service; ningún endpoint acepta el estado como campo escribible del
+  payload.
 
   ## Stack
 

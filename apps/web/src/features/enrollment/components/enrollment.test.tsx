@@ -157,6 +157,48 @@ describe('ProcessPanel', () => {
     expect(screen.getByText(/a la espera de revisión/)).toBeInTheDocument();
   });
 
+  it('aprobada sin entrevista: no le sigue pidiendo esperar fecha', () => {
+    renderizar(
+      <ProcessPanel
+        enrollment={inscripcion({
+          status: 'APPROVED',
+          pendingSteps: [],
+          decidedAt: '2026-09-01T15:00:00.000Z',
+        })}
+      />,
+    );
+
+    expect(screen.getByRole('status')).toHaveTextContent('Aprobada');
+    expect(screen.getByText(/Aprobada por la facultad el/)).toBeInTheDocument();
+    expect(screen.queryByText(/asignará la fecha de tu entrevista/)).not.toBeInTheDocument();
+  });
+
+  it('aprobada con cita agendada: le dice que quedó sin efecto', () => {
+    renderizar(
+      <ProcessPanel
+        enrollment={inscripcion({
+          status: 'APPROVED',
+          pendingSteps: [],
+          decidedAt: '2026-09-01T15:00:00.000Z',
+          pastInterviews: [
+            {
+              id: 'i1',
+              scheduledAt: '2026-09-10T14:00:00.000Z',
+              modality: 'ON_SITE',
+              location: 'Oficina 201',
+              meetingUrl: null,
+              outcome: 'CANCELLED',
+            },
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByText(/quedó sin efecto/)).toBeInTheDocument();
+    // La cita sigue constando, con su desenlace propio: no fue una ausencia.
+    expect(screen.getByText('Anulada por la decisión')).toBeInTheDocument();
+  });
+
   it('muestra el motivo del rechazo y ofrece corregir', () => {
     renderizar(
       <ProcessPanel

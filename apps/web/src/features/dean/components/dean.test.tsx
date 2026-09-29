@@ -86,19 +86,49 @@ describe('DeanDetail', () => {
     expect(await screen.findByRole('button', { name: 'Agendar entrevista' })).toBeInTheDocument();
   });
 
-  // Es la regla central del change: sin entrevista realizada no hay decisión.
-  it('no deja decidir mientras la entrevista no conste realizada', async () => {
+  // El decano decide en cualquier punto de su tramo: la decisión académica
+  // puede estar tomada antes de la cita.
+  it('deja aprobar en todo el tramo del decano, con o sin cita', async () => {
     for (const status of ['PENDING_INTERVIEW', 'INTERVIEW_SCHEDULED'] as const) {
-      fetchMock.mockResolvedValue(responde(inscripcion({ status, interview: CITA })));
+      fetchMock.mockResolvedValue(
+        responde(
+          inscripcion({ status, interview: status === 'INTERVIEW_SCHEDULED' ? CITA : null }),
+        ),
+      );
 
       const { unmount } = renderizar(<DeanDetail enrollmentId="e1" />);
 
-      expect(await screen.findByRole('button', { name: 'Aprobar' })).toBeDisabled();
-      expect(
-        screen.getByText(/Solo puedes decidir cuando la entrevista conste realizada/),
-      ).toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: 'Aprobar' })).toBeEnabled();
       unmount();
     }
+  });
+
+  // Aprobar deja de estar protegido por el estado, así que la protección pasa
+  // a ser este paso de más.
+  it('pide confirmación antes de aprobar y avisa de la cita que anula', async () => {
+    fetchMock.mockResolvedValue(
+      responde(inscripcion({ status: 'INTERVIEW_SCHEDULED', interview: CITA })),
+    );
+
+    renderizar(<DeanDetail enrollmentId="e1" />);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Aprobar' }));
+
+    expect(screen.getByText(/quedará sin efecto/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Confirmar aprobación' })).toBeEnabled();
+    // Nada se envió todavía: el primer clic solo abre la confirmación.
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false);
+  });
+
+  it('no ofrece decidir sobre una inscripción que todavía no le entregaron', async () => {
+    fetchMock.mockResolvedValue(responde(inscripcion({ status: 'UNDER_REVIEW' })));
+
+    renderizar(<DeanDetail enrollmentId="e1" />);
+
+    expect(await screen.findByRole('button', { name: 'Aprobar' })).toBeDisabled();
+    expect(
+      screen.getByText(/Solo puedes decidir cuando la inscripción esté en tu facultad/),
+    ).toBeInTheDocument();
   });
 
   it('habilita aprobar con la entrevista realizada', async () => {

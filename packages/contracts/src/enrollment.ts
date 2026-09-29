@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   attachmentMimeTypeSchema,
   attachmentTypeSchema,
+  declarableInterviewOutcomeSchema,
   enrollmentStatusSchema,
   interviewModalitySchema,
   interviewOutcomeSchema,
@@ -238,7 +239,9 @@ export const scheduleInterviewSchema = z
   });
 export type ScheduleInterviewRequest = z.infer<typeof scheduleInterviewSchema>;
 
-export const interviewOutcomeRequestSchema = z.object({ outcome: interviewOutcomeSchema });
+export const interviewOutcomeRequestSchema = z.object({
+  outcome: declarableInterviewOutcomeSchema,
+});
 export type InterviewOutcomeRequest = z.infer<typeof interviewOutcomeRequestSchema>;
 
 // ─── La inscripción tal como la ve su dueño ──────────────────────────────────

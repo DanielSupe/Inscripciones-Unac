@@ -64,13 +64,25 @@ export const INTERVIEW_MODALITY_LABELS: Record<InterviewModality, string> = {
  * Nulo mientras la cita sigue en pie; en cuanto se declara, la entrevista queda
  * cerrada y ya no se mueve.
  */
-export const INTERVIEW_OUTCOMES = ['HELD', 'NO_SHOW'] as const;
+export const INTERVIEW_OUTCOMES = ['HELD', 'NO_SHOW', 'CANCELLED'] as const;
 export const interviewOutcomeSchema = z.enum(INTERVIEW_OUTCOMES);
 export type InterviewOutcome = z.infer<typeof interviewOutcomeSchema>;
+
+/**
+ * Los dos desenlaces que el decano declara.
+ *
+ * `CANCELLED` no está: no se pide, lo pone el sistema al aprobar antes de la
+ * cita. Dejarlo fuera de este esquema es lo que impide que alguien anule una
+ * entrevista por la vía de declarar su resultado.
+ */
+export const DECLARABLE_INTERVIEW_OUTCOMES = ['HELD', 'NO_SHOW'] as const;
+export const declarableInterviewOutcomeSchema = z.enum(DECLARABLE_INTERVIEW_OUTCOMES);
+export type DeclarableInterviewOutcome = z.infer<typeof declarableInterviewOutcomeSchema>;
 
 export const INTERVIEW_OUTCOME_LABELS: Record<InterviewOutcome, string> = {
   HELD: 'Realizada',
   NO_SHOW: 'No asistió',
+  CANCELLED: 'Anulada por la decisión',
 };
 
 /** Eje de pago, independiente del avance de la inscripción. */

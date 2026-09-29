@@ -53,9 +53,14 @@ enum InterviewModality {
 }
 
 /// Cómo terminó. Nulo mientras la cita sigue en pie.
+///
+/// CANCELLED es la cita que la decisión dejó sin efecto: el decano aprobó antes
+/// de que llegara la fecha. No es una ausencia del aspirante ni una entrevista
+/// celebrada, y por eso no se guarda como ninguna de las dos.
 enum InterviewOutcome {
   HELD
   NO_SHOW
+  CANCELLED
 }
 
 enum Sex {

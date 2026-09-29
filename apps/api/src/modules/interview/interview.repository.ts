@@ -1,5 +1,5 @@
 import type { Interview, Prisma } from '@prisma/client';
-import type { EnrollmentStatus, InterviewOutcome } from '@repo/contracts';
+import type { DeclarableInterviewOutcome, EnrollmentStatus } from '@repo/contracts';
 import { prisma } from '../../shared/database/prisma';
 
 export type { Interview };
@@ -62,7 +62,7 @@ export async function reschedule(id: string, data: ScheduleData): Promise<Interv
 export async function closeAndAdvance(
   id: string,
   enrollmentId: string,
-  outcome: InterviewOutcome,
+  outcome: DeclarableInterviewOutcome,
   nextStatus: EnrollmentStatus,
 ): Promise<Interview> {
   return prisma.$transaction(async (tx) => {

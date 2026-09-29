@@ -1,6 +1,6 @@
 import type {
+  DeclarableInterviewOutcome,
   Enrollment as EnrollmentDto,
-  InterviewOutcome,
   ScheduleInterviewRequest,
   SessionUser,
 } from '@repo/contracts';
@@ -84,11 +84,14 @@ export async function reschedule(
  * futura convertiría el registro en una ficción. Una inasistencia sí puede
  * declararse en cuanto pasa la hora, y devuelve la inscripción a la espera para
  * que el decano ponga otra fecha o rechace.
+ *
+ * El tipo es el de los desenlaces declarables, no el del enum completo: anular
+ * no se pide, lo hace el sistema al aprobar antes de la cita.
  */
 export async function declareOutcome(
   enrollmentId: string,
   session: SessionUser,
-  outcome: InterviewOutcome,
+  outcome: DeclarableInterviewOutcome,
 ): Promise<EnrollmentDto> {
   const enrollment = await enrollmentService.loadOwnedRow(enrollmentId, session);
   const action = outcome === 'HELD' ? 'markHeld' : 'markNoShow';

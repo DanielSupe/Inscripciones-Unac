@@ -462,14 +462,166 @@ describe('decisión del decano', () => {
     expect(fila?.decidedByUserId).toBe(decanoId);
   });
 
-  it('no aprueba sin la entrevista realizada', async () => {
-    const id = await conCitaPasada();
+  it('aprueba sin entrevista una inscripción recién entregada', async () => {
+    const id = await entregada();
+
+    const res = await request(app)
+      .post(`/dean/enrollments/${id}/approve`)
+      .set('Cookie', decanoCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('APPROVED');
+
+    const fila = await prisma.enrollment.findUnique({
+      where: { id },
+      select: { user: { select: { role: true } } },
+    });
+    expect(fila?.user.role).toBe('STUDENT');
+  });
+
+  it('aprueba aunque el pago haya dejado de constar verificado', async () => {
+    const id = await entregada();
+    // El único camino real a un pago pendiente en manos del decano: el
+    // administrador deshace una verificación después de haber entregado.
+    await prisma.paymentReceipt.updateMany({
+      where: { enrollmentId: id },
+      data: { status: 'PENDING', verifiedAt: null, verifiedByUserId: null },
+    });
+
+    const res = await request(app)
+      .post(`/dean/enrollments/${id}/approve`)
+      .set('Cookie', decanoCookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('APPROVED');
+
+    const recibo = await prisma.paymentReceipt.findUnique({ where: { enrollmentId: id } });
+    expect(recibo?.status).toBe('PENDING');
+  });
+
+  it('aprobar con la cita en pie la deja anulada, no realizada', async () => {
+    const id = await entregada();
+    await request(app)
+      .post(`/dean/enrollments/${id}/interview`)
+      .set('Cookie', decanoCookie)
+      .send({
+        scheduledAt: new Date(Date.now() + 86_400_000).toISOString(),
+        modality: 'VIRTUAL',
+        meetingUrl: 'https://reunion.example/sala',
+      });
+
+    const res = await request(app)
+      .post(`/dean/enrollments/${id}/approve`)
+      .set('Cookie', decanoCookie);
+
+    expect(res.status).toBe(200);
+
+    const cita = await prisma.interview.findFirst({ where: { enrollmentId: id } });
+    expect(cita?.outcome).toBe('CANCELLED');
+    expect(cita?.closedAt).not.toBeNull();
+  });
+
+  it('una aprobación que no se puede completar no deja nada a medias', async () => {
+    const id = await entregada();
+    await request(app)
+      .post(`/dean/enrollments/${id}/interview`)
+      .set('Cookie', decanoCookie)
+      .send({
+        scheduledAt: new Date(Date.now() + 86_400_000).toISOString(),
+        modality: 'ON_SITE',
+        location: 'Oficina 201',
+      });
+
+    // Se aprueba dos veces: la segunda ya no encuentra un estado que lo admita,
+    // y no debe tocar ni el rol ni la cita que la primera dejó.
+    await request(app).post(`/dean/enrollments/${id}/approve`).set('Cookie', decanoCookie);
+
+    const segunda = await request(app)
+      .post(`/dean/enrollments/${id}/approve`)
+      .set('Cookie', decanoCookie);
+
+    expect(segunda.status).toBe(409);
+
+    const citas = await prisma.interview.findMany({ where: { enrollmentId: id } });
+    expect(citas).toHaveLength(1);
+    expect(citas[0]?.outcome).toBe('CANCELLED');
+  });
+
+  it('no aprueba lo que el administrador todavía no ha entregado', async () => {
+    const { id } = await lista(programaPropioId);
 
     const res = await request(app)
       .post(`/dean/enrollments/${id}/approve`)
       .set('Cookie', decanoCookie);
 
     expect(res.status).toBe(409);
+
+    const fila = await prisma.enrollment.findUnique({
+      where: { id },
+      select: { status: true, user: { select: { role: true } } },
+    });
+    expect(fila?.status).toBe('UNDER_REVIEW');
+    expect(fila?.user.role).toBe('APPLICANT');
+  });
+
+  it('aprobar una de otra facultad responde igual que una inexistente', async () => {
+    // La otra facultad necesita su propio decano para que el administrador
+    // pueda entregarle nada: así la inscripción llega a estar de verdad en
+    // manos ajenas, y no meramente sin entregar.
+    const otroDecano = await crearCuenta('DEAN');
+    await prisma.faculty.update({
+      where: { id: facultadAjenaId },
+      data: { deanUserId: otroDecano.id },
+    });
+
+    const { id } = await lista(programaAjenoId);
+    await request(app).post(`/admin/enrollments/${id}/hand-over`).set('Cookie', adminCookie);
+
+    const ajena = await request(app)
+      .post(`/dean/enrollments/${id}/approve`)
+      .set('Cookie', decanoCookie);
+    const inexistente = await request(app)
+      .post('/dean/enrollments/cmnoexisteningunaaqui000/approve')
+      .set('Cookie', decanoCookie);
+
+    expect(ajena.status).toBe(inexistente.status);
+    expect(ajena.body).toEqual(inexistente.body);
+
+    const fila = await prisma.enrollment.findUnique({
+      where: { id },
+      select: { status: true, user: { select: { role: true } } },
+    });
+    expect(fila?.status).toBe('PENDING_INTERVIEW');
+    expect(fila?.user.role).toBe('APPLICANT');
+  });
+
+  it('el aspirante no puede aprobarse a sí mismo', async () => {
+    const { id, cookie } = await lista(programaPropioId);
+    await request(app).post(`/admin/enrollments/${id}/hand-over`).set('Cookie', adminCookie);
+
+    const res = await request(app).post(`/dean/enrollments/${id}/approve`).set('Cookie', cookie);
+
+    expect(res.status).toBe(403);
+
+    const fila = await prisma.enrollment.findUnique({
+      where: { id },
+      select: { status: true, user: { select: { role: true } } },
+    });
+    expect(fila?.status).toBe('PENDING_INTERVIEW');
+    expect(fila?.user.role).toBe('APPLICANT');
+  });
+
+  it('el aspirante ve su proceso aprobado sin que se le pida esperar fecha', async () => {
+    const { id, cookie } = await lista(programaPropioId);
+    await request(app).post(`/admin/enrollments/${id}/hand-over`).set('Cookie', adminCookie);
+    await request(app).post(`/dean/enrollments/${id}/approve`).set('Cookie', decanoCookie);
+
+    const res = await request(app).get('/enrollments/current').set('Cookie', cookie);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('APPROVED');
+    expect(res.body.decidedAt).not.toBeNull();
+    expect(res.body.interview).toBeNull();
   });
 
   it('el administrador ya no puede aprobar, y nada cambia al intentarlo', async () => {
