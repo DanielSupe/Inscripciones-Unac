@@ -179,10 +179,7 @@ const adminLayout = createRoute({
 const adminHomeRoute = createRoute({
   getParentRoute: () => adminLayout,
   path: '/admin',
-  component: function AdminScreen() {
-    const { session } = protectedLayout.useRouteContext();
-    return <AdminHome session={session} />;
-  },
+  component: AdminHome,
 });
 
 const adminUsersRoute = createRoute({

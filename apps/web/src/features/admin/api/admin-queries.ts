@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
+  AdminDashboard,
   CreatePeriodRequest,
   CreateUserRequest,
   Enrollment,
@@ -20,6 +21,7 @@ export const adminKeys = {
   inbox: (query: InboxQuery) => [...adminKeys.all, 'inbox', query] as const,
   enrollment: (id: string) => [...adminKeys.all, 'enrollment', id] as const,
   periods: () => [...adminKeys.all, 'periods'] as const,
+  dashboard: () => [...adminKeys.all, 'dashboard'] as const,
 };
 
 export interface UsersQuery {
@@ -180,5 +182,20 @@ export function useUpdatePeriod(id: string) {
         body: JSON.stringify(input),
       }),
     onSuccess: () => void invalidate(),
+  });
+}
+
+// ─── Tablero ─────────────────────────────────────────────────────────────────
+
+/**
+ * Indicadores del inicio del panel.
+ *
+ * Su key cuelga de `adminKeys.all`, así que cualquier mutación del panel que ya
+ * invalida esa raíz —verificar un pago, aprobar— lo refresca sin avisarle.
+ */
+export function useAdminDashboard() {
+  return useQuery({
+    queryKey: adminKeys.dashboard(),
+    queryFn: () => apiFetch<AdminDashboard>('/admin/dashboard'),
   });
 }

@@ -31,3 +31,9 @@ export async function setPaymentStatus(
       : { status: 'PENDING', verifiedAt: null, verifiedByUserId: null },
   });
 }
+
+/** Recibos por estado de pago, agregados en la base de datos. */
+export async function countByStatus(): Promise<{ status: PaymentReceipt['status']; count: number }[]> {
+  const rows = await prisma.paymentReceipt.groupBy({ by: ['status'], _count: { _all: true } });
+  return rows.map((r) => ({ status: r.status, count: r._count._all }));
+}

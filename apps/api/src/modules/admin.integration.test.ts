@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseDatabaseUrl } from '../shared/database/connection';
+import { ENROLLMENT_STATUSES, PAYMENT_STATUSES } from '@repo/contracts';
 
 // El almacenamiento se sustituye por un doble: las pruebas no suben nada a la
 // nube ni exigen credenciales para correr.
@@ -500,5 +501,38 @@ describe('periodos académicos', () => {
       where: { id: periodId },
       data: { enrollmentFeeAmount: 85_000 },
     });
+  });
+});
+
+describe('tablero de indicadores', () => {
+  it('responde 401 sin sesión', async () => {
+    const response = await request(app).get('/admin/dashboard');
+    expect(response.status).toBe(401);
+  });
+
+  it('rechaza con 403 a un aspirante y a un decano', async () => {
+    for (const role of ['APPLICANT', 'DEAN'] as const) {
+      const cuenta = await crearCuenta(role);
+      const response = await request(app).get('/admin/dashboard').set('Cookie', cuenta.cookie);
+      expect(response.status).toBe(403);
+    }
+  });
+
+  it('entrega al admin todos los estados del embudo y de los pagos, aunque estén en cero', async () => {
+    const response = await request(app).get('/admin/dashboard').set('Cookie', adminCookie);
+
+    expect(response.status).toBe(200);
+    expect(Object.keys(response.body.funnel).sort()).toEqual([...ENROLLMENT_STATUSES].sort());
+    expect(Object.keys(response.body.payments).sort()).toEqual([...PAYMENT_STATUSES].sort());
+    expect(response.body.goal).toHaveProperty('totalEnrolled');
+  });
+
+  it('cuenta en el embudo una inscripción recién creada en borrador', async () => {
+    const antes = await request(app).get('/admin/dashboard').set('Cookie', adminCookie);
+    const aspirante = await crearCuenta('APPLICANT');
+    await request(app).post('/enrollments').set('Cookie', aspirante.cookie);
+    const despues = await request(app).get('/admin/dashboard').set('Cookie', adminCookie);
+
+    expect(despues.body.funnel.DRAFT).toBe(antes.body.funnel.DRAFT + 1);
   });
 });

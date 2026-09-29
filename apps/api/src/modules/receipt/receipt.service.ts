@@ -1,4 +1,5 @@
 import { env } from '@repo/config/server';
+import { adminDashboardSchema, PAYMENT_STATUSES, type PaymentStatus } from '@repo/contracts';
 import { NotFoundError } from '../../shared/errors';
 import * as catalogService from '../catalog/catalog.service';
 import * as receiptRepository from './receipt.repository';
@@ -56,4 +57,14 @@ export async function setPaymentVerified(
   if (yaEstaAsi) return receipt;
 
   return receiptRepository.setPaymentStatus(enrollmentId, verified, verifierId);
+}
+
+/** Cuántos recibos hay en cada estado de pago, con cero en los vacíos. */
+export async function countByStatus(): Promise<Record<PaymentStatus, number>> {
+  const byStatus = new Map(
+    (await receiptRepository.countByStatus()).map((r) => [r.status, r.count]),
+  );
+  return adminDashboardSchema.shape.payments.parse(
+    Object.fromEntries(PAYMENT_STATUSES.map((s) => [s, byStatus.get(s) ?? 0])),
+  );
 }

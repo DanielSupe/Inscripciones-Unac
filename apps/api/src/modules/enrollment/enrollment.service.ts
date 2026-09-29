@@ -1,6 +1,11 @@
 import type { Prisma } from '@prisma/client';
 import type { Enrollment as EnrollmentDto, EnrollmentDraft, SessionUser } from '@repo/contracts';
-import { completeEnrollmentSchema } from '@repo/contracts';
+import {
+  adminDashboardSchema,
+  completeEnrollmentSchema,
+  ENROLLMENT_STATUSES,
+  type EnrollmentStatus,
+} from '@repo/contracts';
 import { ConflictError, NotFoundError, ValidationError } from '../../shared/errors';
 import * as catalogService from '../catalog/catalog.service';
 import * as receiptService from '../receipt/receipt.service';
@@ -161,4 +166,19 @@ export async function loadOwnedRow(
   session: SessionUser,
 ): Promise<EnrollmentWithRelations> {
   return loadOwned(id, session);
+}
+
+/**
+ * Cuántas inscripciones hay en cada estado.
+ *
+ * Devuelve todos los estados, con cero en los vacíos: el `groupBy` omite los
+ * que no tienen filas, y quien consume el conteo no debería tener que saberlo.
+ */
+export async function countByStatus(): Promise<Record<EnrollmentStatus, number>> {
+  const byStatus = new Map(
+    (await enrollmentRepository.countByStatus()).map((r) => [r.status, r.count]),
+  );
+  return adminDashboardSchema.shape.funnel.parse(
+    Object.fromEntries(ENROLLMENT_STATUSES.map((s) => [s, byStatus.get(s) ?? 0])),
+  );
 }

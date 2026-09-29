@@ -1428,3 +1428,26 @@ textarea {
   border: 1px solid var(--borde);
   border-radius: 4px;
 }
+
+/* ─── Tablero del administrador ────────────────────────────────────────────── */
+
+.tablero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+.tablero__bloque {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--borde);
+  border-radius: 6px;
+}
+.tablero__bloque h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+/* Cada par dt/dd va envuelto para que el lector de pantalla los lea juntos;
+   `contents` deja que el grid de la ficha los siga alineando. */
+.ficha__fila {
+  display: contents;
+}

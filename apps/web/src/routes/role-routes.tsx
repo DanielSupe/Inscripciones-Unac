@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router';
-import type { SessionUser } from '@repo/contracts';
 import {
   useCatalog,
   useCurrentEnrollment,
@@ -8,6 +7,7 @@ import {
 import { EnrollmentWizard } from '../features/enrollment/components/enrollment-wizard';
 import { ProcessPanel } from '../features/enrollment/components/process-panel';
 import { ReceiptPanel } from '../features/enrollment/components/receipt-panel';
+import { AdminDashboard } from '../features/admin/components/admin-dashboard';
 
 function Cargando() {
   return (
@@ -134,22 +134,12 @@ export function StudentReceipt() {
   return <ApplicantReceipt />;
 }
 
-export function AdminHome({ session }: { session: SessionUser }) {
+export function AdminHome() {
   return (
     <>
       <h1>Panel de administración</h1>
-      <p className="subtitulo">
-        Desde aquí gestionarás usuarios, aspirantes y periodos académicos.
-      </p>
-
-      <dl className="ficha">
-        <dt>Correo</dt>
-        <dd>{session.email}</dd>
-        <dt>Documento</dt>
-        <dd>
-          {session.documentType} {session.documentNumber}
-        </dd>
-      </dl>
+      <p className="subtitulo">Cómo va la admisión, de un vistazo.</p>
+      <AdminDashboard />
     </>
   );
 }

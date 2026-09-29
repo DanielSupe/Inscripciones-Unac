@@ -228,3 +228,10 @@ export async function approveAndPromote(id: string, deciderId: string): Promise<
     });
   });
 }
+
+
+/** Inscripciones por estado, agregadas en la base de datos. */
+export async function countByStatus(): Promise<{ status: EnrollmentStatus; count: number }[]> {
+  const rows = await prisma.enrollment.groupBy({ by: ['status'], _count: { _all: true } });
+  return rows.map((r) => ({ status: r.status, count: r._count._all }));
+}

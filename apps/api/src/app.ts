@@ -16,6 +16,7 @@ import { interviewRoutes } from './modules/interview/interview.routes';
 import { catalogAdminRoutes } from './modules/catalog/catalog.admin.routes';
 import { receiptAdminRoutes } from './modules/receipt/receipt.admin.routes';
 import { goalsAdminRoutes } from './modules/goals/goals.admin.routes';
+import { dashboardAdminRoutes } from './modules/dashboard/dashboard.admin.routes';
 
 /**
  * Construye la aplicación sin ponerla a escuchar.
@@ -53,6 +54,7 @@ export function createApp(): Express {
   app.use(catalogAdminRoutes);
   app.use(receiptAdminRoutes);
   app.use(goalsAdminRoutes);
+  app.use(dashboardAdminRoutes);
 
   // El orden importa: primero la ruta no encontrada, y el manejador de errores
   // siempre al final.

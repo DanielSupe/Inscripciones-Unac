@@ -4,3 +4,4 @@ export * from './auth';
 export * from './enrollment';
 export * from './admin';
 export * from './goals';
+export * from './dashboard';
